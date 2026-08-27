@@ -6,12 +6,12 @@ accepted
 ## 来源
 - 来源 1：用户提供的《dsh-cloudflare-access 实现规格说明书》全文（本仓库初始输入）。
 - 来源 2：DeepSeek Harness 源码调研，版本 `0.1.0-rc.5`。结论见 `docs/references/dsh-source-research.md`。
-- 来源 3：本机生产 DSH `0.1.1-rc.2`（`DSH 安装目录`，Web profile）上的插件安装、远程 Settings / Credentials、unload 验证。
+- 来源 3：本机生产 DSH `0.1.1-rc.2` Web profile 上的插件安装、远程 Settings / Credentials、unload 验证。
 
 ## Facts
 - FACT-1: 项目定位是 DSH Profile Bundle + Client Plugin，为 Cloudflare Access 后方的 DeepSeek Harness Origin 提供 JWT 再验证，并把认证结果映射为远程 privileged API 授权。
 - FACT-2: 插件不提供账号、密码、MFA、登录页、Session、用户数据库、Cloudflare API 管理、nginx 管理或 DSH Agent/Sandbox 权限管理。
-- FACT-3: 禁止 fork / 修改 `DSH 安装目录` / patch 编译后的 DSH JS / 替换 Web 静态资源 / 修改 DSH 上游源码。
+- FACT-3: 禁止 fork / 修改 DSH 安装目录 / patch 编译后的 DSH JS / 替换 Web 静态资源 / 修改 DSH 上游源码。
 - FACT-4: 远程 privileged 请求必须同时通过 DSH 原有 Host/Origin 检查和有效 Cloudflare Access JWT；有效 JWT 不得绕过 Host/Origin。
 - FACT-5: Loopback 访问不要求 Cloudflare JWT，privileged API 保持 DSH 原行为，以支持 `SSH Tunnel → localhost → DSH`。
 - FACT-6: 远程 privileged API 固定要求有效 JWT，v0.1 不提供关闭开关。覆盖 `settings.*`、`credentials.*`、特权子集 `agentPreset.*`、`llm.discoverModels`。
@@ -60,7 +60,6 @@ accepted
 - REF-5: 不要用 Cookie `CF_Authorization` 做 Origin 身份。
 - REF-6: 不要 fork DSH 或替换 connection 整包作为正常安装方式。
 
-
 ### 需要适配后采用
-- REF-8: DSH `webServer.register` 包装作为 Server 授权插入点。适配条件：包装必须发生在 `connection` 注册 `/api` 之前；unload 时恢复原方法；JWT 不能跳过 Host/Origin。
-- REF-9: DSH Client `connection.isLoopback` 包装作为 capability enablement。适配条件：Client 不做 JWT 判断；`immediately: true`；Server 仍拒绝 `host.pickDirectory` / `host.openPath`；unload 时恢复原值。
+- REF-7: DSH `webServer.register` 包装作为 Server 授权插入点。适配条件：包装必须发生在 `connection` 注册 `/api` 之前；unload 时恢复原方法；JWT 不能跳过 Host/Origin。
+- REF-8: DSH Client `connection.isLoopback` 包装作为 capability enablement。适配条件：Client 不做 JWT 判断；`immediately: true`；Server 仍拒绝 `host.pickDirectory` / `host.openPath`；unload 时恢复原值。

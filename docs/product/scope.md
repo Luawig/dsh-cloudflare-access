@@ -21,7 +21,6 @@ v0.1.0 交付 Cloudflare Access JWT 在 DSH Origin 的再验证，以及远程�
 - 用户名密码、MFA、用户数据库、RBAC、Session。
 - Cloudflare API、自动创建 Access Application。
 - nginx / 反向代理管理。
-
 - Fork 或 patch DSH dist/source。
 - 单个 JWT 结果缓存。
 - DSH 插件市场安装（后续候选）。
