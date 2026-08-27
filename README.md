@@ -49,7 +49,7 @@ Requires a DeepSeek Harness **Web** profile.
 dsh plugin --profile web add dsh-cloudflare-access
 ```
 
-Until the npm package is on the public registry, install the GitHub default branch:
+The package is on [npm](https://www.npmjs.com/package/dsh-cloudflare-access). To install an unreleased Git commit instead:
 
 ```sh
 dsh plugin --profile web add github:Luawig/dsh-cloudflare-access

@@ -19,10 +19,10 @@
 - Web Client capability enablement，且 `dsh.client.immediately: true`。
 - 标准 `dsh.bundle` + `dsh.client` 安装；unload 可逆。
 - 在 DSH `0.1.1-rc.2` Web profile 上 live 验证远程 Settings / Credentials。
+- npm 公共包 `dsh-cloudflare-access@0.1.0`。
 
 ## 尚未交付
 
-- 把包发布到 npm 公共 registry（安装命令已按发布后形态书写）。
 - 提交 dsh.pub / 插件市场 listing。
 - 跟随尚未实测的更新 DSH 版本。
 - 远程授权 `host.pickDirectory` / `host.openPath`，或隐藏因此出现的 native host UI。
