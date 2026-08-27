@@ -31,8 +31,7 @@ Cloudflare Access 已经完成身份认证，DSH 却无法识别该认证关系�
 - NON-GOAL-5: 远程开放 `host.pickDirectory` 或 `host.openPath`。
 - NON-GOAL-6: 实现 RBAC 或按 Cloudflare 用户/组做细粒度授权。
 - NON-GOAL-7: Fork DSH、patch 其 dist，或替换 Web 静态资源。
-
-- NON-GOAL-9: v0.1 接入 DSH 插件市场（仅预留兼容方向）。
+- NON-GOAL-8: v0.1 接入 DSH 插件市场（仅预留兼容方向）。
 
 ## 用户角色
 

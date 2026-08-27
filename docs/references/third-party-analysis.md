@@ -34,7 +34,7 @@ accepted
 
 ## 参考对象
 - 名称：DeepSeek Harness 插件与 Client Module 机制
-- 来源：本地源码 `DeepSeek Harness upstream source` `0.1.0-rc.5`，以及 `docs/user/develop/basic/publish.md`
+- 来源：DeepSeek Harness `0.1.0-rc.5` 源码，以及官方 `docs/user/develop/basic/publish.md`
 - 参考目的：out-of-tree bundle 安装、client 构建、可逆 fiber
 
 ## 可借鉴能力
@@ -46,7 +46,6 @@ accepted
 ## 不采用点
 - 不采用 in-tree 的 `packages/client/tsdown.client.ts` 作为运行时依赖。原因：out-of-tree 包必须自包含构建。
 - 不采用替换 `id: connection` 的 bundle overlay。原因：等于维护 connection 分叉。
-
 
 ## 需要适配后采用
 - Client 构建：需要独立 tsdown/esbuild 配置，把 DSH 平台模块标为 external（`react`、`cordis` 等），产出 `lib/client.js`。

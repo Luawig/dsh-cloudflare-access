@@ -4,7 +4,7 @@
 accepted
 
 ## 背景
-规格要求不修改 DSH 本体，并在编码前确认扩展点。对 `DeepSeek Harness upstream source` `0.1.0-rc.5` 的调研结论：
+规格要求不修改 DSH 本体，并在编码前确认扩展点。对 DeepSeek Harness `0.1.0-rc.5` 源码的调研结论：
 
 - 无正式 authorization hook。
 - `PRIVILEGED_METHODS` 硬编码在 `@deepseek-ai/dsh-client-connection` 的 Fetch fallback 内，且用空 trustedHosts 调用 `isTrustedApiRequest`。

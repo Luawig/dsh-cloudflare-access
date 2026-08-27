@@ -4,7 +4,7 @@
 accepted
 
 ## 调研对象
-- 仓库：`DeepSeek Harness upstream source`
+- 仓库：DeepSeek Harness 上游源码
 - 版本：根与相关包均为 `0.1.0-rc.5`
 - 日期：2026-08-27
 - 结论：不需要修改 DSH dist/source。v0.1 用 `compat/` 做可逆包装。
