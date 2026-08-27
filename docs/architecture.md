@@ -85,6 +85,8 @@ RULE-ARCH-4: 插件 unload 必须恢复 `webServer.register` / `registerUpgrade`
 
 RULE-ARCH-5: 不得占用 `connection.rpc.intercept`。该槽位已被 Typert Gateway 使用。
 
+RULE-ARCH-6: Client 模块必须 `dsh.client.immediately: true` 且 inject `@deepseek-ai/dsh-client-connection`，否则 Web boot 会在 ui-settings 快照 memory persistence 之后才加载本模块。
+
 ## 运行时流程
 
 ### 远程 privileged HTTP
