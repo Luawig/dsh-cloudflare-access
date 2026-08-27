@@ -12,12 +12,13 @@ The package MUST declare `dsh.bundle` with `patch` pointing at `./cordis.patch.y
 - **AND** no manual profile patch edit is required
 
 ### Requirement: Formal client module
-The package MUST ship a built `exports["./client"]` and declare `dsh.client` with `platform` `web`. Installing the plugin MUST NOT require the user to rebuild DSH Web.
+The package MUST ship a built `exports["./client"]` and declare `dsh.client` with `platform` `web`, `immediately` `true`, and `inject` including `@deepseek-ai/dsh-client-connection`. Installing the plugin MUST NOT require the user to rebuild DSH Web. `immediately` is required so the Web boot prefetches this module before `ui-settings` snapshots loopback state.
 
 #### Scenario: Client export present
 - **GIVEN** the published npm package
 - **WHEN** DSH scans `dsh.client` packages
 - **THEN** `./client` resolves to a prebuilt browser module
+- **AND** the declaration has `immediately: true`
 
 ### Requirement: Configuration precedence and env lock
 Runtime configuration MUST resolve Environment Variables over Cordis/Bundle config over defaults. If `DSH_CF_ACCESS_TEAM_DOMAIN`, `DSH_CF_ACCESS_AUDIENCES`, or `DSH_CF_ACCESS_ORDINARY_MODE` exists, that field MUST NOT be overridden by Web Settings or Cordis config at runtime. Audiences env MUST accept comma-separated values. Users MUST NOT be required to configure issuer or jwksUrl separately.
