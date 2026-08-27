@@ -28,7 +28,7 @@ dsh-cloudflare-access
    └─ Client: capability enablement
 ```
 
-DSH `0.1.0-rc.5` 没有公开 authorization hook。架构选择是：
+DSH `0.1.1-rc.2`（与调研用的 `0.1.0-rc.5` 相同扩展点）没有公开 authorization hook。架构选择是：
 
 ```text
 Hook A → Server authorization
@@ -139,6 +139,3 @@ dsh-cloudflare-access
 - 独立认证服务或 sidecar。
 - 替换 `@deepseek-ai/dsh-client-connection` 整行。
 - 在浏览器做 JWT 校验。
-
-## Open Questions
-- QUESTION-3：远程 native host UI 可见但 403 是否保持为已知限制。见 `docs/intake.md`。

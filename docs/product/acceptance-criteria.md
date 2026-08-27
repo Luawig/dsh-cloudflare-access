@@ -7,6 +7,7 @@ accepted
 - AC-INSTALL-1: `dsh plugin --profile web add dsh-cloudflare-access` 后，profile 自动加入 bundle，无需手工修改 `$DSH_HOME/profiles/web/cordis.patch.yml`。
 - AC-INSTALL-2: 不修改 DSH 安装目录、不替换 Web 静态资源、不 patch 编译后的 DSH JS。
 - AC-INSTALL-3: 重启 DSH 后 Server Plugin 与 Client Module 自动加载。
+- AC-INSTALL-4: 远程打开 Settings 时浏览器发起 `settings.describe`，而不是因 `isLoopback=false` 快照停留在 memory persistence。`dsh.client.immediately` 必须为 `true`。
 - AC-LOCAL-1: 访问 localhost 时 Settings / Credentials / Preset / Model discovery 保持可用，且不要求 Cloudflare JWT。
 - AC-REMOTE-OK-1: `dsh.example.com` + 有效 JWT + 正确 aud + 正确 issuer + 合法 Host/Origin 时，Settings 可打开、Models 可加载、Credentials 可写入、Agent Preset 管理可用、Model discovery 可用。
 - AC-REMOTE-DENY-1: 无 JWT、错误 JWT、错误 AUD、错误 issuer、过期 JWT、错误 Host、错误 Origin 时，远程 privileged API 均不可使用。
@@ -52,7 +53,7 @@ accepted
 - 性能：不在每个请求上拉取 Cloudflare JWKS；不缓存单个 JWT 结果。
 - 安全：fail closed；JWT 不能替代 Host/Origin；日志不记录 token / Cookie / credential / API key。
 - 可观测性：启动时记录 issuer 是否配置、audience 数量、ordinary 模式；失败记录原因类别。
-- 兼容性：README 兼容性矩阵只包含实测 DSH 版本；peerDependencies 不声明未测范围。
+- 兼容性：README 兼容性矩阵只包含实测 DSH 版本；peerDependencies 不声明未测范围。当前实测为 `0.1.1-rc.2`。
 
 ## 不验收事项
 - 远程 `host.pickDirectory` / `host.openPath` 可用。

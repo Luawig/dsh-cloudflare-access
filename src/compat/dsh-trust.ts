@@ -1,5 +1,5 @@
 /**
- * DSH 0.1.0-rc.5 compatible Host/Origin fence copy.
+ * DSH 0.1.1-rc.2 compatible Host/Origin fence copy (same shape as 0.1.0-rc.5).
  * Kept in compat so JWT core does not import DSH internals.
  * Source of truth in DSH: packages/client/connection/src/api-request-trust.ts
  */
