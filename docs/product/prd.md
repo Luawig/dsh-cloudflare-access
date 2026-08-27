@@ -109,4 +109,4 @@ Cloudflare Access 已经完成身份认证，DSH 却无法识别该认证关系�
 - AC-7: 删除或禁用插件后 DSH 恢复官方远程 privileged 限制。
 
 ## Open Questions
-- 见 `docs/intake.md` 的 QUESTION-1 至 QUESTION-4。
+- 见 `docs/intake.md`。

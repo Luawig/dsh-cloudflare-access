@@ -40,4 +40,4 @@ DeepSeek Harness 允许远程 trusted-host 访问普通 Web/API，但配置面 p
 - `docs/references/dsh-source-research.md`
 
 ## Open Questions
-- 见 `docs/intake.md` QUESTION-1 至 QUESTION-4。不阻塞 v0.1 实现。
+- 无阻塞项。历史摄取问题见 `docs/intake.md`。

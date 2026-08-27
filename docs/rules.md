@@ -105,11 +105,13 @@ RULE-LIFECYCLE-NO-GLOBAL-PATCH: 允许在 `compat/` 内对服务方法进行可�
 
 ## 包装规则
 
-RULE-PACKAGING-BUNDLE: `package.json` 必须声明 `dsh.bundle.patch` 指向 `cordis.patch.yml`。
+RULE-PACKAGING-BUNDLE: `package.json` 必须声明 `dsh.bundle.patch` 指向 `cordis.patch.yml`，并 export `./cordis.patch.yml`。patch 行 `name` 必须等于 npm 包名。
 
-RULE-PACKAGING-CLIENT: 必须提供构建完成的 `exports["./client"]` 与 `dsh.client.platform = web`。安装后无需用户编译 DSH Web。
+RULE-PACKAGING-CLIENT: 必须提供构建完成的 `exports["./client"]` 与 `dsh.client.platform = web`。`dsh.client.immediately` 必须为 `true`，`inject` 必须包含 `@deepseek-ai/dsh-client-connection`。安装后无需用户编译 DSH Web。
 
-RULE-PACKAGING-PEER: `peerDependencies` 只声明实际验证过的 DSH API 范围；v0.1 对准 `0.1.0-rc.5`，禁止提前写宽泛范围。
+RULE-PACKAGING-PEER: `peerDependencies` 只声明实际验证过的 DSH API 范围；v0.1 对准 `0.1.1-rc.2`，禁止提前写宽泛范围。
+
+RULE-PACKAGING-ARTIFACTS: Git 树与 npm tarball 必须包含 `lib/index.js`、`lib/client.js`、`README.md`、`LICENSE`。`lib/client.js` 必须是 `window.__ModuleLoader__.load` factory。`keywords` 必须包含 `dsh-plugin`。
 
 ## 无效模式
 - Cloudflare 故障时 fail open。

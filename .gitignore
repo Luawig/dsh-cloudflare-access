@@ -1,7 +1,8 @@
 node_modules/
-lib/
 coverage/
 .DS_Store
 *.tgz
 .env
 .env.*
+.pnpm-store/
+.live-test-home/

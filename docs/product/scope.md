@@ -9,11 +9,11 @@ v0.1.0 交付 Cloudflare Access JWT 在 DSH Origin 的再验证，以及远程�
 
 - JWT 验证：`Cf-Access-Jwt-Assertion`、iss、多 aud、exp/nbf、Remote JWKS。
 - 授权：loopback bypass；远程 privileged 固定要求 JWT；普通 API 三种模式。
-- Client：远程 Web 解锁 Settings / Credentials / Agent Preset 管理 / Model discovery 的尝试路径。
+- Client：远程 Web 解锁 Settings / Credentials / Agent Preset 管理 / Model discovery 的尝试路径；`dsh.client.immediately: true`，在 ui-settings 快照 loopback 之前 prefetch。
 - 包装：正式 `dsh.bundle` + `dsh.client`，Env/Cordis 配置。
-- 质量：单元测试、至少一项集成测试、README、SECURITY.md、CHANGELOG.md、MIT npm 包。
+- 质量：单元测试、集成测试、README、SECURITY.md、CHANGELOG.md、MIT npm 包。
 
-目标 DSH 版本：已调研的 `0.1.0-rc.5`。兼容性矩阵在测试通过后写入 README，不提前扩大。
+目标 DSH 版本：live-tested `0.1.1-rc.2`。`0.1.0-rc.5` 仅作为 hook 源码调研。兼容性矩阵只写实测版本，不提前扩大。
 
 ## 明确不做
 

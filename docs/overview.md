@@ -39,7 +39,7 @@ PRINCIPLE-7: 插件效果必须可逆。unload 后不得留下包装、路由替
 - **Ordinary API**：其余 `/api` 方法以及事件 WebSocket；是否要求 JWT 由 `auth.ordinary` 决定。
 - **Team Domain**：Cloudflare Access 团队域名，同时作为 JWT issuer 与 JWKS 基址。
 - **Capability enablement**：Client 允许 UI 发起 Host settings RPC；成功与否由 Server 决定。
-- **compat 适配**：针对 DSH `0.1.0-rc.5` 无公开 auth hook 的可逆包装。
+- **compat 适配**：针对 DSH 无公开 auth hook 的可逆包装；live target 为 `0.1.1-rc.2`。
 
 ## 术语表
 - **DSH**：DeepSeek Harness。

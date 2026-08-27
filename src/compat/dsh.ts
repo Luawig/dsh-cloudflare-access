@@ -1,6 +1,7 @@
 /**
- * DSH 0.1.0-rc.5 server hook: wrap webServer.register before connection
- * mounts /api, then apply JWT policy. Isolated from JWT core.
+ * DSH 0.1.1-rc.2 (live-tested) server hook, researched against 0.1.0-rc.5:
+ * wrap webServer.register before connection mounts /api, then apply JWT policy.
+ * Isolated from JWT core.
  */
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { Duplex } from 'node:stream'

@@ -1,0 +1,24 @@
+import type { OrdinaryMode } from '../config.ts';
+import type { JwtFailureReason, JwtVerification } from './types.ts';
+/** Remote methods this plugin may authorize with a valid JWT. Native host methods stay DSH-pinned. */
+export declare const PRIVILEGED_METHODS: Set<string>;
+export type AuthClass = 'loopback' | 'privileged' | 'ordinary';
+export interface AuthDecision {
+    effect: 'allow' | 'deny';
+    class: AuthClass;
+    reason: JwtFailureReason | 'host_origin_rejected' | null;
+}
+export interface PolicyInput {
+    isLoopback: boolean;
+    hostOriginTrusted: boolean;
+    method: string | undefined;
+    ordinary: OrdinaryMode;
+    jwt: JwtVerification;
+}
+export declare function isPrivilegedMethod(method: string | undefined): boolean;
+/**
+ * Pure authorization decision. Host/Origin is consumed as a boolean; this
+ * function never inspects headers and never treats JWT as a Host substitute.
+ */
+export declare function decide(input: PolicyInput): AuthDecision;
+//# sourceMappingURL=policy.d.ts.map

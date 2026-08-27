@@ -37,5 +37,5 @@
 
 ## 6. Acceptance validation
 
-- [ ] 6.1 Validate `docs/product/acceptance-criteria.md` AC-INSTALL / AC-LOCAL / AC-REMOTE / AC-ORDINARY / AC-ROTATE / AC-UNLOAD against implemented tests or documented manual gaps.
+- [x] 6.1 Validate `docs/product/acceptance-criteria.md` AC-INSTALL / AC-LOCAL / AC-REMOTE / AC-ORDINARY / AC-ROTATE / AC-UNLOAD against implemented tests or documented manual gaps. Live ACs were exercised on DSH `0.1.1-rc.2` (install, remote Settings/Credentials, unload). AC-ROTATE is covered by jose unit tests (`unknown kid` refresh), not a live Cloudflare key rotation.
 - [x] 6.2 Confirm no DSH dist/source modification and no leftover global patch after simulated unload.
