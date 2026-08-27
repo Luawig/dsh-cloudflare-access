@@ -25,7 +25,7 @@ accepted
 - FACT-14: 安装形态必须是正式 `dsh.bundle`（`cordis.patch.yml`）+ `dsh.client`（`exports["./client"]`），使用 `dsh plugin --profile web add ...` 后无需手工改 Profile patch。
 - FACT-15: 插件 unload 必须可逆，不得留下全局 monkey patch；DSH 恢复官方 remote privileged 限制。
 - FACT-16: v0.1 不实现 `host.pickDirectory`、`host.openPath`、用户名密码、MFA、用户数据库、RBAC、Cloudflare API、自动创建 Access Application、nginx 管理。远程页上因此出现的 native host UI 入口可以存在，对应 RPC 保持 403。
-- FACT-17: License MIT；TypeScript；ESM；GitHub 开源；npm 公共包名 `dsh-cloudflare-access`。
+- FACT-17: License MIT；TypeScript；ESM；GitHub 开源；npm 公共包 `dsh-cloudflare-access@0.1.0`（https://www.npmjs.com/package/dsh-cloudflare-access）。
 - FACT-18: `PRIVILEGED_METHODS` 硬编码在 `@deepseek-ai/dsh-client-connection`；无正式 authorization hook。Client 通过 `connection.isLoopback` 将 Settings persistence 设为 `memory`。完整调用链见 `docs/references/dsh-source-research.md`。
 - FACT-19: DSH 当前 `settings.*` 全部为特权方法；`credentials.*` 全部为特权方法；`agentPreset.list` / `agentPreset.select` 非特权，`agentPreset.read` / `copy` / `openDocument` / `remove` 为特权；`llm.discoverModels` 为特权，`llm.providers` / `llm.models` 非特权。
 - FACT-20: `dsh.client.immediately` 必须为 `true`，且 inject `@deepseek-ai/dsh-client-connection`。否则 Web boot 在 ui-settings 把 `isLoopback=false` 快照进 memory persistence 之后才加载本模块，远程 Settings 不会调用 `settings.describe`。
@@ -41,12 +41,12 @@ accepted
 - ASSUMPTION-6: Client 把远程页的 `connection.isLoopback` 视为 capability enablement（仅 UI），安全裁决仍在 Server。
 
 ## Open Questions
-- QUESTION-1: npm 发布账号是什么？影响：npm 安装命令何时从 GitHub fallback 变为 registry 真源。
+- 无。
 
 ## Pending Decisions
-- DECISION-1: npm provenance 是否在首个正式发布启用。候选项：v0.1.0 启用 / 延后。
-- DECISION-2: Dependabot 与 Renovate 选哪一个。候选项：Dependabot / Renovate / 两者都不在 v0.1 强制。
-- DECISION-3: 何时提交 dsh.pub / 插件市场 listing。v0.1 保证 `dsh plugin --profile web add`；市场列为后续。
+- DECISION-1: npm provenance 是否在后续版本启用。v0.1.0 未启用。
+- DECISION-2: Dependabot 与 Renovate 选哪一个。候选项：Dependabot / Renovate / 两者都不强制。
+- DECISION-3: 何时提交 dsh.pub / 插件市场 listing。当前安装路径是 `dsh plugin --profile web add dsh-cloudflare-access`。
 
 ## Reference Signals
 
