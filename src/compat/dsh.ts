@@ -96,9 +96,7 @@ export function installServerCompat(ctx: CompatContext, deps: ServerCompatDeps):
     const inner = route.handler
     return originalRegisterUpgrade.call(ctx.webServer, {
       ...route,
-      handler: (req, socket, head) => {
-        void handleUpgrade(req, socket, head, inner, deps, logger)
-      },
+      handler: (req, socket, head) => handleUpgrade(req, socket, head, inner, deps, logger),
     })
   }
 

@@ -73,6 +73,16 @@ The plugin SHALL normalize `cloudflare.teamDomain` / `DSH_CF_ACCESS_TEAM_DOMAIN`
 - **WHEN** it is verified
 - **THEN** the outcome is `valid`
 
+#### Scenario: Unsigned JWT
+- **GIVEN** a compact JWT with `alg` `none`
+- **WHEN** it is verified
+- **THEN** the outcome is `invalid`
+
+#### Scenario: Future nbf
+- **GIVEN** a signed token whose `nbf` is more than 30 seconds in the future
+- **WHEN** it is verified
+- **THEN** the outcome is `invalid` / `malformed`
+
 ### Requirement: Remote JWKS with rotation
 The plugin SHALL use a Remote JWK Set at `<teamDomain>/cdn-cgi/access/certs`. It MUST NOT fetch JWKS on every request as a hard-coded per-request client, and MUST NOT pin a process-start snapshot forever. Unknown `kid` MUST trigger JWKS refresh. JWKS unavailability MUST fail closed.
 
