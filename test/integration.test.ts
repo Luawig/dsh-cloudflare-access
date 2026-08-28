@@ -1,4 +1,5 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
+import type { Duplex } from 'node:stream'
 import { generateKeyPair, SignJWT, exportJWK } from 'jose'
 import { apply as applyServer } from '../src/server/index.ts'
 import { httpStatusFor } from '../src/server/authorization.ts'
@@ -10,6 +11,7 @@ interface FakeWebServer {
   register(route: WebRoute): () => void
   registerUpgrade(route: WebUpgradeRoute): () => void
   routes: Map<string, WebRoute>
+  upgrades: Map<string, WebUpgradeRoute>
 }
 
 function collectEffects(disposers: Array<() => void>) {
@@ -21,14 +23,17 @@ function collectEffects(disposers: Array<() => void>) {
 
 function createFakeWebServer(): FakeWebServer {
   const routes = new Map<string, WebRoute>()
+  const upgrades = new Map<string, WebUpgradeRoute>()
   return {
     routes,
+    upgrades,
     register(route) {
       routes.set(`${route.kind}:${route.path}`, route)
       return () => { routes.delete(`${route.kind}:${route.path}`) }
     },
-    registerUpgrade() {
-      return () => {}
+    registerUpgrade(route) {
+      upgrades.set(route.path, route)
+      return () => { upgrades.delete(route.path) }
     },
   }
 }
@@ -54,6 +59,23 @@ describe('server compat integration', () => {
     expect(webServer.register).not.toBe(original)
     for (const dispose of disposers) dispose()
     expect(webServer.register).toBe(original)
+  })
+
+  it('restores registerUpgrade after unload', () => {
+    const webServer = createFakeWebServer()
+    const original = webServer.registerUpgrade
+    const disposers: Array<() => void> = []
+    applyServer({
+      webServer,
+      logger: { info() {}, warn() {} },
+      effect: collectEffects(disposers),
+      get() { return undefined },
+    }, {
+      cloudflare: { teamDomain: 'https://example.cloudflareaccess.com', audiences: ['aud'] },
+    })
+    expect(webServer.registerUpgrade).not.toBe(original)
+    for (const dispose of disposers) dispose()
+    expect(webServer.registerUpgrade).toBe(original)
   })
 
   it('maps missing privileged JWT to 401', () => {
@@ -296,6 +318,133 @@ describe('JWT verification is skipped when it cannot change the decision', () =>
   })
 })
 
+describe('wrap-layer authorization paths', () => {
+  const config = {
+    teamDomain: 'https://example.cloudflareaccess.com',
+    audiences: ['aud'],
+    ordinary: 'off' as const,
+    envLocked: { teamDomain: false, audiences: false, ordinary: false },
+  }
+
+  it('lets loopback privileged through without a JWT', async () => {
+    const webServer = createFakeWebServer()
+    const disposers: Array<() => void> = []
+    let verifies = 0
+    installServerCompat({
+      webServer,
+      logger: { info() {}, warn() {} },
+      effect: collectEffects(disposers),
+      get() { return undefined },
+    }, {
+      config,
+      verifier: {
+        async verify() {
+          verifies += 1
+          return { outcome: 'missing', reason: 'missing_token', audienceMatched: null }
+        },
+      },
+      getTrustedHosts: () => ['dsh.example.com'],
+      getApiFetchHandler: () => ({ fetch: async () => new Response('proxied') }),
+    })
+    webServer.register({
+      kind: 'prefix',
+      path: '/api',
+      handler: async (_req, res) => {
+        res.writeHead(200)
+        res.end('loopback')
+      },
+    })
+    const route = webServer.routes.get('prefix:/api')
+    if (route === undefined) throw new Error('route missing')
+    const result = await invoke(route.handler, {
+      url: '/api/settings.describe',
+      headers: { host: 'localhost' },
+    })
+    expect(result.status).toBe(200)
+    expect(result.body).toBe('loopback')
+    expect(verifies).toBe(0)
+    for (const dispose of disposers) dispose()
+  })
+
+  it('denies remote privileged when apiProxy is missing', async () => {
+    const webServer = createFakeWebServer()
+    const disposers: Array<() => void> = []
+    installServerCompat({
+      webServer,
+      logger: { info() {}, warn() {} },
+      effect: collectEffects(disposers),
+      get() { return undefined },
+    }, {
+      config,
+      verifier: {
+        async verify() {
+          return { outcome: 'valid', reason: null, audienceMatched: 'aud' }
+        },
+      },
+      getTrustedHosts: () => ['dsh.example.com'],
+      getApiFetchHandler: () => undefined,
+    })
+    webServer.register({
+      kind: 'prefix',
+      path: '/api',
+      handler: async (_req, res) => {
+        res.writeHead(200)
+        res.end('inner')
+      },
+    })
+    const route = webServer.routes.get('prefix:/api')
+    if (route === undefined) throw new Error('route missing')
+    const result = await invoke(route.handler, {
+      url: '/api/settings.describe',
+      headers: {
+        host: 'dsh.example.com',
+        origin: 'https://dsh.example.com',
+        'cf-access-jwt-assertion': 'valid-looking',
+      },
+    })
+    expect(result.status).toBe(403)
+    expect(result.body).toBe('forbidden')
+    for (const dispose of disposers) dispose()
+  })
+
+  it('rejects an events upgrade when ordinary=required and the JWT is missing', async () => {
+    const webServer = createFakeWebServer()
+    const disposers: Array<() => void> = []
+    installServerCompat({
+      webServer,
+      logger: { info() {}, warn() {} },
+      effect: collectEffects(disposers),
+      get() { return undefined },
+    }, {
+      config: { ...config, ordinary: 'required' },
+      verifier: {
+        async verify() {
+          return { outcome: 'missing', reason: 'missing_token', audienceMatched: null }
+        },
+      },
+      getTrustedHosts: () => ['dsh.example.com'],
+      getApiFetchHandler: () => undefined,
+    })
+    let inner = 0
+    webServer.registerUpgrade({
+      path: '/api/events.mux',
+      handler: async () => { inner += 1 },
+    })
+    const route = webServer.upgrades.get('/api/events.mux')
+    if (route === undefined) throw new Error('upgrade missing')
+    const result = await invokeUpgrade(route.handler, {
+      url: '/api/events.mux',
+      headers: {
+        host: 'dsh.example.com',
+        origin: 'https://dsh.example.com',
+      },
+    })
+    expect(result.status).toBe(401)
+    expect(inner).toBe(0)
+    for (const dispose of disposers) dispose()
+  })
+})
+
 async function invoke(
   handler: (req: IncomingMessage, res: ServerResponse) => void | Promise<void>,
   input: { url: string, headers: Record<string, string> },
@@ -342,4 +491,26 @@ async function invoke(
     } as unknown as ServerResponse
     Promise.resolve(handler(req, res)).catch(reject)
   })
+}
+
+async function invokeUpgrade(
+  handler: (req: IncomingMessage, socket: Duplex, head: Buffer) => void | Promise<void>,
+  input: { url: string, headers: Record<string, string> },
+): Promise<{ status: number }> {
+  let status = 101
+  const req = {
+    url: input.url,
+    method: 'GET',
+    headers: input.headers,
+  } as unknown as IncomingMessage
+  const socket = {
+    write(chunk: unknown) {
+      const text = Buffer.isBuffer(chunk) ? chunk.toString() : String(chunk)
+      const match = /^HTTP\/1\.\d\s+(\d+)/.exec(text)
+      if (match?.[1] !== undefined) status = Number(match[1])
+    },
+    destroy() {},
+  } as unknown as Duplex
+  await handler(req, socket, Buffer.alloc(0))
+  return { status }
 }
