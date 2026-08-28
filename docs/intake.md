@@ -44,9 +44,11 @@ accepted
 - 无。
 
 ## Pending Decisions
-- DECISION-1: npm provenance 是否在后续版本启用。v0.1.0 未启用。
-- DECISION-2: Dependabot 与 Renovate 选哪一个。候选项：Dependabot / Renovate / 两者都不强制。
 - DECISION-3: 何时提交 dsh.pub / 插件市场 listing。当前安装路径是 `dsh plugin --profile web add dsh-cloudflare-access`。
+
+## Resolved Decisions
+- DECISION-1: 后续版本从 GitHub Actions 使用 `npm publish --provenance`；v0.1.0 未带 provenance。
+- DECISION-2: 使用 Dependabot（npm 与 GitHub Actions，weekly）。
 
 ## Reference Signals
 
