@@ -55,7 +55,7 @@ The package is on [npm](https://www.npmjs.com/package/dsh-cloudflare-access). To
 dsh plugin --profile web add github:Luawig/dsh-cloudflare-access
 ```
 
-The Git tree ships prebuilt `lib/index.js` and `lib/client.js`, so a Git install does not need to run this package's `prepare` script.
+The Git tree ships prebuilt `lib/index.js` and `lib/client.js`. A `github:` install uses those artifacts and does not need TypeScript or esbuild; `prepare` skips the build when this package is installed as a dependency.
 
 Restart DSH. The package declares `dsh.bundle` and `dsh.client`, so the Web profile bundle stack and browser module graph pick it up. You do not edit `$DSH_HOME/profiles/web/cordis.patch.yml` by hand, and you do not patch DSH itself.
 

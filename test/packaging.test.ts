@@ -17,6 +17,7 @@ describe('dsh plugin manifest', () => {
     expect(pkg.files).toEqual(expect.arrayContaining(['lib', 'cordis.patch.yml', 'README.md', 'LICENSE']))
     expect(pkg.keywords).toContain('dsh-plugin')
     expect(pkg.publishConfig.access).toBe('public')
+    expect(pkg.scripts.prepare).toBe('node scripts/prepare.mjs')
   })
 
   it('inserts the installed package name as a stable bundle row', () => {

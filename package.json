@@ -51,7 +51,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json && node scripts/bundle-client.mjs",
-    "prepare": "pnpm run build",
+    "prepare": "node scripts/prepare.mjs",
     "prepublishOnly": "pnpm test && pnpm typecheck && node scripts/check-pack.mjs",
     "pack:check": "node scripts/check-pack.mjs",
     "test": "vitest run",
