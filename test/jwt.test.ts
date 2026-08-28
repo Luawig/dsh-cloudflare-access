@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
-import { exportJWK, generateKeyPair, SignJWT, type CryptoKey, type JWK } from 'jose'
-import { createJwtVerifier, CLOCK_TOLERANCE_SECONDS } from '../src/server/cloudflare-jwt.ts'
+import { exportJWK, generateKeyPair, SignJWT, type CryptoKey, type JWK, type JWTPayload } from 'jose'
+import { createJwtVerifier, CLOCK_TOLERANCE_SECONDS, type JwtVerifier } from '../src/server/cloudflare-jwt.ts'
 import { resolveConfig } from '../src/config.ts'
 
 const TEAM = 'https://example.cloudflareaccess.com'
@@ -13,6 +13,49 @@ async function listen(handler: (req: IncomingMessage, res: ServerResponse) => vo
   const address = server.address()
   if (address === null || typeof address === 'string') throw new Error('expected tcp address')
   return { url: `http://127.0.0.1:${String(address.port)}/cdn-cgi/access/certs`, server }
+}
+
+function pluginConfig(issuer: string, audiences: string[]) {
+  return {
+    teamDomain: issuer,
+    audiences,
+    ordinary: 'off' as const,
+    envLocked: { teamDomain: false, audiences: false, ordinary: false },
+  }
+}
+
+async function withLocalJwks(
+  keys: JWK[],
+  audiences: string[],
+  run: (input: { verifier: JwtVerifier, issuer: string }) => Promise<void>,
+): Promise<void> {
+  const { url, server } = await listen((_req, res) => {
+    res.writeHead(200, { 'content-type': 'application/json' })
+    res.end(JSON.stringify({ keys }))
+  })
+  try {
+    const issuer = url.replace('/cdn-cgi/access/certs', '')
+    const verifier = createJwtVerifier(pluginConfig(issuer, audiences), { jwks: { cooldownDuration: 0 } })
+    await run({ verifier, issuer })
+  } finally {
+    server.close()
+  }
+}
+
+async function signAccessToken(
+  privateKey: CryptoKey,
+  issuer: string,
+  audience: string | undefined,
+  claims: { exp?: number | string, nbf?: number } = {},
+): Promise<string> {
+  const payload: JWTPayload = {}
+  let token = new SignJWT(payload)
+    .setProtectedHeader({ alg: 'RS256', kid: 'key-1' })
+    .setIssuedAt()
+    .setIssuer(issuer)
+  if (audience !== undefined) token = token.setAudience(audience)
+  if (claims.nbf !== undefined) token = token.setNotBefore(claims.nbf)
+  return token.setExpirationTime(claims.exp ?? '5m').sign(privateKey)
 }
 
 describe('Cloudflare Access JWT', () => {
@@ -29,224 +72,77 @@ describe('Cloudflare Access JWT', () => {
   })
 
   it('accepts a valid JWT', async () => {
-    const { url, server } = await listen((_req, res) => {
-      res.writeHead(200, { 'content-type': 'application/json' })
-      res.end(JSON.stringify({ keys: [publicJwk] }))
-    })
-    try {
-      const localOrigin = url.replace('/cdn-cgi/access/certs', '')
-      const localVerifier = createJwtVerifier({
-        teamDomain: localOrigin,
-        audiences: [AUD_A],
-        ordinary: 'off',
-        envLocked: { teamDomain: false, audiences: false, ordinary: false },
-      }, { jwks: { cooldownDuration: 0 } })
-      const token = await new SignJWT({})
-        .setProtectedHeader({ alg: 'RS256', kid: 'key-1' })
-        .setIssuedAt()
-        .setIssuer(localOrigin)
-        .setAudience(AUD_A)
-        .setExpirationTime('5m')
-        .sign(privateKey)
-      const result = await localVerifier.verify({ 'cf-access-jwt-assertion': token })
+    await withLocalJwks([publicJwk], [AUD_A], async ({ verifier, issuer }) => {
+      const token = await signAccessToken(privateKey, issuer, AUD_A)
+      const result = await verifier.verify({ 'cf-access-jwt-assertion': token })
       expect(result.outcome).toBe('valid')
-    } finally {
-      server.close()
-    }
+    })
   })
 
   it('rejects an expired JWT', async () => {
-    const { url, server } = await listen((_req, res) => {
-      res.writeHead(200, { 'content-type': 'application/json' })
-      res.end(JSON.stringify({ keys: [publicJwk] }))
-    })
-    try {
-      const localOrigin = url.replace('/cdn-cgi/access/certs', '')
-      const verifier = createJwtVerifier({
-        teamDomain: localOrigin,
-        audiences: [AUD_A],
-        ordinary: 'off',
-        envLocked: { teamDomain: false, audiences: false, ordinary: false },
-      }, { jwks: { cooldownDuration: 0 } })
-      const token = await new SignJWT({})
-        .setProtectedHeader({ alg: 'RS256', kid: 'key-1' })
-        .setIssuedAt()
-        .setIssuer(localOrigin)
-        .setAudience(AUD_A)
-        .setExpirationTime(Math.floor(Date.now() / 1000) - 60)
-        .sign(privateKey)
+    await withLocalJwks([publicJwk], [AUD_A], async ({ verifier, issuer }) => {
+      const token = await signAccessToken(privateKey, issuer, AUD_A, {
+        exp: Math.floor(Date.now() / 1000) - 60,
+      })
       const result = await verifier.verify({ 'cf-access-jwt-assertion': token })
       expect(result.outcome).toBe('invalid')
       expect(result.reason).toBe('expired')
-    } finally {
-      server.close()
-    }
+    })
   })
 
   it('accepts a JWT within the clock-skew tolerance', async () => {
-    const { url, server } = await listen((_req, res) => {
-      res.writeHead(200, { 'content-type': 'application/json' })
-      res.end(JSON.stringify({ keys: [publicJwk] }))
-    })
-    try {
-      const localOrigin = url.replace('/cdn-cgi/access/certs', '')
-      const verifier = createJwtVerifier({
-        teamDomain: localOrigin,
-        audiences: [AUD_A],
-        ordinary: 'off',
-        envLocked: { teamDomain: false, audiences: false, ordinary: false },
-      }, { jwks: { cooldownDuration: 0 } })
-      const token = await new SignJWT({})
-        .setProtectedHeader({ alg: 'RS256', kid: 'key-1' })
-        .setIssuedAt()
-        .setIssuer(localOrigin)
-        .setAudience(AUD_A)
-        .setExpirationTime(Math.floor(Date.now() / 1000) - Math.min(5, CLOCK_TOLERANCE_SECONDS - 1))
-        .sign(privateKey)
+    await withLocalJwks([publicJwk], [AUD_A], async ({ verifier, issuer }) => {
+      const token = await signAccessToken(privateKey, issuer, AUD_A, {
+        exp: Math.floor(Date.now() / 1000) - Math.min(5, CLOCK_TOLERANCE_SECONDS - 1),
+      })
       const result = await verifier.verify({ 'cf-access-jwt-assertion': token })
       expect(result.outcome).toBe('valid')
-    } finally {
-      server.close()
-    }
+    })
   })
 
   it('rejects an invalid signature', async () => {
     const other = await generateKeyPair('RS256', { extractable: true })
-    const { url, server } = await listen((_req, res) => {
-      res.writeHead(200, { 'content-type': 'application/json' })
-      res.end(JSON.stringify({ keys: [publicJwk] }))
-    })
-    try {
-      const localOrigin = url.replace('/cdn-cgi/access/certs', '')
-      const verifier = createJwtVerifier({
-        teamDomain: localOrigin,
-        audiences: [AUD_A],
-        ordinary: 'off',
-        envLocked: { teamDomain: false, audiences: false, ordinary: false },
-      }, { jwks: { cooldownDuration: 0 } })
-      const token = await new SignJWT({})
-        .setProtectedHeader({ alg: 'RS256', kid: 'key-1' })
-        .setIssuedAt()
-        .setIssuer(localOrigin)
-        .setAudience(AUD_A)
-        .setExpirationTime('5m')
-        .sign(other.privateKey)
+    await withLocalJwks([publicJwk], [AUD_A], async ({ verifier, issuer }) => {
+      const token = await signAccessToken(other.privateKey, issuer, AUD_A)
       const result = await verifier.verify({ 'cf-access-jwt-assertion': token })
       expect(result.outcome).toBe('invalid')
       expect(result.reason).toBe('invalid_signature')
-    } finally {
-      server.close()
-    }
+    })
   })
 
   it('rejects a wrong issuer', async () => {
-    const { url, server } = await listen((_req, res) => {
-      res.writeHead(200, { 'content-type': 'application/json' })
-      res.end(JSON.stringify({ keys: [publicJwk] }))
-    })
-    try {
-      const localOrigin = url.replace('/cdn-cgi/access/certs', '')
-      const verifier = createJwtVerifier({
-        teamDomain: localOrigin,
-        audiences: [AUD_A],
-        ordinary: 'off',
-        envLocked: { teamDomain: false, audiences: false, ordinary: false },
-      }, { jwks: { cooldownDuration: 0 } })
-      const token = await new SignJWT({})
-        .setProtectedHeader({ alg: 'RS256', kid: 'key-1' })
-        .setIssuedAt()
-        .setIssuer('https://attacker.example')
-        .setAudience(AUD_A)
-        .setExpirationTime('5m')
-        .sign(privateKey)
+    await withLocalJwks([publicJwk], [AUD_A], async ({ verifier }) => {
+      const token = await signAccessToken(privateKey, 'https://attacker.example', AUD_A)
       const result = await verifier.verify({ 'cf-access-jwt-assertion': token })
       expect(result.outcome).toBe('invalid')
       expect(result.reason).toBe('issuer_mismatch')
-    } finally {
-      server.close()
-    }
+    })
   })
 
   it('rejects a wrong audience', async () => {
-    const { url, server } = await listen((_req, res) => {
-      res.writeHead(200, { 'content-type': 'application/json' })
-      res.end(JSON.stringify({ keys: [publicJwk] }))
-    })
-    try {
-      const localOrigin = url.replace('/cdn-cgi/access/certs', '')
-      const verifier = createJwtVerifier({
-        teamDomain: localOrigin,
-        audiences: [AUD_A],
-        ordinary: 'off',
-        envLocked: { teamDomain: false, audiences: false, ordinary: false },
-      }, { jwks: { cooldownDuration: 0 } })
-      const token = await new SignJWT({})
-        .setProtectedHeader({ alg: 'RS256', kid: 'key-1' })
-        .setIssuedAt()
-        .setIssuer(localOrigin)
-        .setAudience('other-aud')
-        .setExpirationTime('5m')
-        .sign(privateKey)
+    await withLocalJwks([publicJwk], [AUD_A], async ({ verifier, issuer }) => {
+      const token = await signAccessToken(privateKey, issuer, 'other-aud')
       const result = await verifier.verify({ 'cf-access-jwt-assertion': token })
       expect(result.outcome).toBe('invalid')
       expect(result.reason).toBe('audience_mismatch')
-    } finally {
-      server.close()
-    }
+    })
   })
 
   it('rejects a missing audience', async () => {
-    const { url, server } = await listen((_req, res) => {
-      res.writeHead(200, { 'content-type': 'application/json' })
-      res.end(JSON.stringify({ keys: [publicJwk] }))
-    })
-    try {
-      const localOrigin = url.replace('/cdn-cgi/access/certs', '')
-      const verifier = createJwtVerifier({
-        teamDomain: localOrigin,
-        audiences: [AUD_A],
-        ordinary: 'off',
-        envLocked: { teamDomain: false, audiences: false, ordinary: false },
-      }, { jwks: { cooldownDuration: 0 } })
-      const token = await new SignJWT({})
-        .setProtectedHeader({ alg: 'RS256', kid: 'key-1' })
-        .setIssuedAt()
-        .setIssuer(localOrigin)
-        .setExpirationTime('5m')
-        .sign(privateKey)
+    await withLocalJwks([publicJwk], [AUD_A], async ({ verifier, issuer }) => {
+      const token = await signAccessToken(privateKey, issuer, undefined)
       const result = await verifier.verify({ 'cf-access-jwt-assertion': token })
       expect(result.outcome).toBe('invalid')
       expect(result.reason).toBe('audience_mismatch')
-    } finally {
-      server.close()
-    }
+    })
   })
 
   it('accepts a token that matches one of multiple audiences', async () => {
-    const { url, server } = await listen((_req, res) => {
-      res.writeHead(200, { 'content-type': 'application/json' })
-      res.end(JSON.stringify({ keys: [publicJwk] }))
-    })
-    try {
-      const localOrigin = url.replace('/cdn-cgi/access/certs', '')
-      const verifier = createJwtVerifier({
-        teamDomain: localOrigin,
-        audiences: [AUD_A, AUD_B],
-        ordinary: 'off',
-        envLocked: { teamDomain: false, audiences: false, ordinary: false },
-      }, { jwks: { cooldownDuration: 0 } })
-      const token = await new SignJWT({})
-        .setProtectedHeader({ alg: 'RS256', kid: 'key-1' })
-        .setIssuedAt()
-        .setIssuer(localOrigin)
-        .setAudience(AUD_B)
-        .setExpirationTime('5m')
-        .sign(privateKey)
+    await withLocalJwks([publicJwk], [AUD_A, AUD_B], async ({ verifier, issuer }) => {
+      const token = await signAccessToken(privateKey, issuer, AUD_B)
       const result = await verifier.verify({ 'cf-access-jwt-assertion': token })
       expect(result.outcome).toBe('valid')
-    } finally {
-      server.close()
-    }
+    })
   })
 
   it('refreshes JWKS on unknown kid', async () => {
@@ -258,20 +154,9 @@ describe('Cloudflare Access JWT', () => {
       res.end(JSON.stringify({ keys }))
     })
     try {
-      const localOrigin = url.replace('/cdn-cgi/access/certs', '')
-      const verifier = createJwtVerifier({
-        teamDomain: localOrigin,
-        audiences: [AUD_A],
-        ordinary: 'off',
-        envLocked: { teamDomain: false, audiences: false, ordinary: false },
-      }, { jwks: { cooldownDuration: 0 } })
-      const token = await new SignJWT({})
-        .setProtectedHeader({ alg: 'RS256', kid: 'key-1' })
-        .setIssuedAt()
-        .setIssuer(localOrigin)
-        .setAudience(AUD_A)
-        .setExpirationTime('5m')
-        .sign(privateKey)
+      const issuer = url.replace('/cdn-cgi/access/certs', '')
+      const verifier = createJwtVerifier(pluginConfig(issuer, [AUD_A]), { jwks: { cooldownDuration: 0 } })
+      const token = await signAccessToken(privateKey, issuer, AUD_A)
       const result = await verifier.verify({ 'cf-access-jwt-assertion': token })
       expect(result.outcome).toBe('valid')
       expect(generation).toBeGreaterThanOrEqual(2)
@@ -281,19 +166,8 @@ describe('Cloudflare Access JWT', () => {
   })
 
   it('fails closed when JWKS is unavailable', async () => {
-    const verifier = createJwtVerifier({
-      teamDomain: 'http://127.0.0.1:1',
-      audiences: [AUD_A],
-      ordinary: 'off',
-      envLocked: { teamDomain: false, audiences: false, ordinary: false },
-    })
-    const token = await new SignJWT({})
-      .setProtectedHeader({ alg: 'RS256', kid: 'key-1' })
-      .setIssuedAt()
-      .setIssuer('http://127.0.0.1:1')
-      .setAudience(AUD_A)
-      .setExpirationTime('5m')
-      .sign(privateKey)
+    const verifier = createJwtVerifier(pluginConfig('http://127.0.0.1:1', [AUD_A]))
+    const token = await signAccessToken(privateKey, 'http://127.0.0.1:1', AUD_A)
     const result = await verifier.verify({ 'cf-access-jwt-assertion': token })
     expect(result.outcome).toBe('invalid')
     expect(result.reason).toBe('jwks_unavailable')
@@ -317,21 +191,10 @@ describe('Cloudflare Access JWT', () => {
   })
 
   it('rejects an unsigned JWT', async () => {
-    const { url, server } = await listen((_req, res) => {
-      res.writeHead(200, { 'content-type': 'application/json' })
-      res.end(JSON.stringify({ keys: [publicJwk] }))
-    })
-    try {
-      const localOrigin = url.replace('/cdn-cgi/access/certs', '')
-      const verifier = createJwtVerifier({
-        teamDomain: localOrigin,
-        audiences: [AUD_A],
-        ordinary: 'off',
-        envLocked: { teamDomain: false, audiences: false, ordinary: false },
-      }, { jwks: { cooldownDuration: 0 } })
+    await withLocalJwks([publicJwk], [AUD_A], async ({ verifier, issuer }) => {
       const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url')
       const payload = Buffer.from(JSON.stringify({
-        iss: localOrigin,
+        iss: issuer,
         aud: AUD_A,
         exp: Math.floor(Date.now() / 1000) + 300,
       })).toString('base64url')
@@ -340,37 +203,17 @@ describe('Cloudflare Access JWT', () => {
       })
       expect(result.outcome).toBe('invalid')
       expect(result.reason).not.toBeNull()
-    } finally {
-      server.close()
-    }
+    })
   })
 
   it('rejects a JWT whose nbf is still in the future', async () => {
-    const { url, server } = await listen((_req, res) => {
-      res.writeHead(200, { 'content-type': 'application/json' })
-      res.end(JSON.stringify({ keys: [publicJwk] }))
-    })
-    try {
-      const localOrigin = url.replace('/cdn-cgi/access/certs', '')
-      const verifier = createJwtVerifier({
-        teamDomain: localOrigin,
-        audiences: [AUD_A],
-        ordinary: 'off',
-        envLocked: { teamDomain: false, audiences: false, ordinary: false },
-      }, { jwks: { cooldownDuration: 0 } })
-      const token = await new SignJWT({})
-        .setProtectedHeader({ alg: 'RS256', kid: 'key-1' })
-        .setIssuedAt()
-        .setIssuer(localOrigin)
-        .setAudience(AUD_A)
-        .setNotBefore(Math.floor(Date.now() / 1000) + 120)
-        .setExpirationTime('5m')
-        .sign(privateKey)
+    await withLocalJwks([publicJwk], [AUD_A], async ({ verifier, issuer }) => {
+      const token = await signAccessToken(privateKey, issuer, AUD_A, {
+        nbf: Math.floor(Date.now() / 1000) + 120,
+      })
       const result = await verifier.verify({ 'cf-access-jwt-assertion': token })
       expect(result.outcome).toBe('invalid')
       expect(result.reason).toBe('malformed')
-    } finally {
-      server.close()
-    }
+    })
   })
 })
