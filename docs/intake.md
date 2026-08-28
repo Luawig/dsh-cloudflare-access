@@ -4,9 +4,9 @@
 accepted
 
 ## 来源
-- 来源 1：用户提供的《dsh-cloudflare-access 实现规格说明书》全文（本仓库初始输入）。
+- 来源 1：本仓库产品文档与 OpenSpec（`docs/product/`、`openspec/specs/`）。
 - 来源 2：DeepSeek Harness 源码调研，版本 `0.1.0-rc.5`。结论见 `docs/references/dsh-source-research.md`。
-- 来源 3：本机生产 DSH `0.1.1-rc.2` Web profile 上的插件安装、远程 Settings / Credentials、unload 验证。
+- 来源 3：在 DSH `0.1.1-rc.2` Web profile 上 live 验证插件安装、远程 Settings / Credentials、unload。
 
 ## Facts
 - FACT-1: 项目定位是 DSH Profile Bundle + Client Plugin，为 Cloudflare Access 后方的 DeepSeek Harness Origin 提供 JWT 再验证，并把认证结果映射为远程 privileged API 授权。
