@@ -1,3 +1,4 @@
+import { rmSync } from 'node:fs'
 import { build } from 'esbuild'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
@@ -22,3 +23,8 @@ await build({
     js: 'return module.exports; } });',
   },
 })
+
+// tsc also emits lib/client/index.js; the runtime export is the esbuild factory.
+rmSync(join(packageRoot, 'lib/client/index.js'), { force: true })
+rmSync(join(packageRoot, 'lib/client/index.js.map'), { force: true })
+
