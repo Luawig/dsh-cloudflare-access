@@ -58,8 +58,9 @@ function writeAuth(res: ServerResponse, status: 401 | 403, body: string): void {
   res.end(body)
 }
 
-function rejectUpgrade(socket: Duplex): void {
-  socket.write('HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n')
+function rejectUpgrade(socket: Duplex, status: 401 | 403): void {
+  const reason = status === 401 ? 'Unauthorized' : 'Forbidden'
+  socket.write(`HTTP/1.1 ${status} ${reason}\r\nConnection: close\r\n\r\n`)
   socket.destroy()
 }
 
@@ -201,7 +202,8 @@ async function handleUpgrade(
   })
   if (decision.effect === 'deny') {
     logDenied(logger, { method, reason: decision.reason, privileged: false })
-    rejectUpgrade(socket)
+    const http = httpStatusFor(decision)
+    rejectUpgrade(socket, http?.status ?? 401)
     return
   }
   await inner(req, socket, head)

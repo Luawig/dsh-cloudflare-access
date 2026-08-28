@@ -10,6 +10,7 @@
 - Return 502 from the privileged HTTP bridge when `apiProxy.fetch` throws, instead of leaving the client hanging.
 - Cover loopback wrap, missing `apiProxy`, events upgrade denial, unsigned JWT, and future `nbf` in tests.
 - Enable weekly Dependabot for npm and GitHub Actions. Document npm provenance for the next publish (v0.1.0 did not include it).
+- Use the same 401/403 split on `/api/events.*` upgrades as on HTTP APIs. Handshake still fails; only the status line changes for invalid tokens.
 
 ## 0.1.0
 

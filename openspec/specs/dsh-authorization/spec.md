@@ -116,3 +116,8 @@ When the plugin can set HTTP status, missing authentication on remote privileged
 - **GIVEN** remote privileged with an expired JWT
 - **WHEN** the request is rejected
 - **THEN** the HTTP status is 403
+
+#### Scenario: Invalid token on events upgrade
+- **GIVEN** `ordinary=required` and an expired JWT
+- **WHEN** `/api/events.mux` is upgraded
+- **THEN** the handshake is rejected with HTTP 403
