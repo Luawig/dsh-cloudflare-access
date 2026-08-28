@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.0.0
+
 - Normalize `teamDomain` to an http(s) origin so a host without `https://` still produces a valid issuer and JWKS URL.
 - Skip JWT signature verification when it cannot change the allow/deny decision (`ordinary=off` APIs and failed Host/Origin).
 - Skip the `prepare` build during dependency installs so `github:` installs use committed `lib/` without TypeScript or esbuild.

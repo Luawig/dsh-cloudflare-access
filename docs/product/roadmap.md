@@ -11,7 +11,7 @@ accepted
 - 验收方式：`docs/product/acceptance-criteria.md`；单元/集成测试；本机 DSH `0.1.1-rc.2` 远程 Settings / Credentials / unload。
 
 ## Milestone 2 — 分发与 DSH 版本跟随
-- 状态：npm `dsh-cloudflare-access@0.1.0` 已发布；Dependabot 已启用；下一次 publish 使用 npm provenance。DSH 新版本跟随仍待实测后再扩矩阵。
+- 状态：npm `dsh-cloudflare-access@1.0.0` 已发布；Dependabot 已启用；从 GitHub Actions 的 publish 使用 npm provenance。DSH 新版本跟随仍待实测后再扩矩阵。
 - 目标：安装命令落到真实分发渠道，并在 DSH 升级后保持可逆扩展点。
 - 交付能力：npm 公共包、可选 dsh.pub listing、针对新 DSH 的兼容性矩阵；必要时只改 `compat/`。
 - 不包含：把 compat hack 扩散进 JWT 核心；未测版本的宽 peer range。
