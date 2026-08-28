@@ -11,7 +11,7 @@ ConfigResolver
 - 读取并解析环境变量。
 - 按 Env > Cordis > Default 合并。
 - 标记 env-locked 字段。
-- 规范化 `teamDomain`（用于 iss 与 JWKS URL 推导）。
+- 规范化 `teamDomain` 为 http(s) origin（用于 iss 与 JWKS URL 推导）。
 
 ## 非职责
 - 验证 JWT。
@@ -27,7 +27,7 @@ RULE-SERVICE-CONFIG-3: `issuer` 与 `jwksUrl` 不得作为用户可配字段暴�
 
 ## 接口
 - `load(cordisConfig): PluginConfig`
-- `jwksUrl(config): string | null` — `teamDomain` 存在时返回 `<teamDomain>/cdn-cgi/access/certs`
+- `jwksUrl(config): string | null` — `teamDomain` 存在时返回 `<origin>/cdn-cgi/access/certs`
 
 ## 依赖
 - 上游：`process.env`、Cordis `Config`
@@ -35,7 +35,8 @@ RULE-SERVICE-CONFIG-3: `issuer` 与 `jwksUrl` 不得作为用户可配字段暴�
 
 ## 故障处理
 - 非法 `ordinary` 枚举：插件加载失败。
-- `teamDomain` 无法解析为 URL：插件加载失败。
+- `teamDomain` 无法解析为 http(s) URL：插件加载失败。
+- 缺 scheme 的主机名按 `https://<host>` 解析；结果只保留 origin（scheme + host + 端口），丢弃 path。
 
 ## 示例
 Env `DSH_CF_ACCESS_TEAM_DOMAIN=https://example.cloudflareaccess.com` 且 Cordis `teamDomain: https://other.cloudflareaccess.com` → 运行时 issuer 为 `example`。

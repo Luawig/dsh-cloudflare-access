@@ -40,6 +40,19 @@ The plugin SHALL verify JWTs with the `jose` library and MUST NOT implement RSA,
 - **WHEN** it is verified
 - **THEN** the outcome is `invalid` / `issuer_mismatch`
 
+### Requirement: Team domain is normalized to an http(s) origin
+The plugin SHALL normalize `cloudflare.teamDomain` / `DSH_CF_ACCESS_TEAM_DOMAIN` to an http(s) origin before using it as `iss` or deriving the JWKS URL. A host without a scheme MUST be treated as `https://`. A non-http(s) scheme MUST fail configuration.
+
+#### Scenario: Host without scheme
+- **GIVEN** teamDomain `example.cloudflareaccess.com`
+- **WHEN** config is resolved
+- **THEN** issuer is `https://example.cloudflareaccess.com` and JWKS is `https://example.cloudflareaccess.com/cdn-cgi/access/certs`
+
+#### Scenario: Trailing slash and path are dropped
+- **GIVEN** teamDomain `https://example.cloudflareaccess.com/cdn-cgi/access/`
+- **WHEN** config is resolved
+- **THEN** issuer is `https://example.cloudflareaccess.com`
+
 #### Scenario: Wrong audience
 - **GIVEN** configured audiences `["a"]` and a token whose aud is `b`
 - **WHEN** it is verified

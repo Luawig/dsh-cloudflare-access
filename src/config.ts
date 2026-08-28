@@ -39,8 +39,19 @@ function envPresent(env: NodeJS.Dict<string>, name: string): boolean {
 
 function normalizeTeamDomain(raw: string | null | undefined): string | null {
   if (raw === undefined || raw === null) return null
-  const trimmed = raw.trim().replace(/\/+$/, '')
-  return trimmed === '' ? null : trimmed
+  const trimmed = raw.trim()
+  if (trimmed === '') return null
+  const withScheme = trimmed.includes('://') ? trimmed : `https://${trimmed}`
+  let parsed: URL
+  try {
+    parsed = new URL(withScheme)
+  } catch {
+    throw new Error(`cloudflare.teamDomain is not a valid URL: ${trimmed}`)
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new Error(`cloudflare.teamDomain is not a valid URL: ${trimmed}`)
+  }
+  return parsed.origin
 }
 
 function parseAudiences(raw: string | readonly string[] | undefined): string[] {
@@ -81,14 +92,6 @@ export function resolveConfig(
   const ordinary = ordinaryLocked
     ? parseOrdinary(env[ENV_ORDINARY_MODE], ENV_ORDINARY_MODE)
     : parseOrdinary(cordis.auth?.ordinary, 'auth.ordinary')
-
-  if (teamDomain !== null) {
-    try {
-      void new URL(teamDomain.includes('://') ? teamDomain : `https://${teamDomain}`)
-    } catch {
-      throw new Error(`cloudflare.teamDomain is not a valid URL: ${teamDomain}`)
-    }
-  }
 
   return {
     teamDomain,

@@ -37,7 +37,7 @@ auth:
 
 字段：
 
-- `cloudflare.teamDomain`: `string | null`。Cloudflare Access team domain，如 `https://example.cloudflareaccess.com`。
+- `cloudflare.teamDomain`: `string | null`。Cloudflare Access team domain。可写 `https://example.cloudflareaccess.com` 或 `example.cloudflareaccess.com`；运行时规范化为 http(s) origin。
 - `cloudflare.audiences`: `string[]`。Access Application AUD，至少一个非空值才算已配置。
 - `auth.ordinary`: `off | optional | required`。默认 `off`。
 
@@ -48,7 +48,7 @@ auth:
 
 ## JWT 声明约束
 - `alg`: 由 JWKS 与 `jose` 允许的算法决定，拒绝 `none` 与降级。
-- `iss`: 必须等于 `teamDomain`。
+- `iss`: 必须等于规范化后的 `teamDomain` origin。
 - `aud`: string 或 string[]；必须与配置 audiences 有交集。
 - `exp`: 必须未过期。
 - `nbf`: 若存在则必须已生效。

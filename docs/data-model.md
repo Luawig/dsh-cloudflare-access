@@ -9,7 +9,7 @@ accepted
 ## 实体
 
 ### PluginConfig
-- teamDomain: `string | null`
+- teamDomain: `string | null`。非空时为规范化后的 http(s) origin。
 - audiences: `string[]`
 - ordinary: `off | optional | required`
 - envLocked: `EnvLockedKeys`

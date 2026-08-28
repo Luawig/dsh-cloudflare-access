@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Normalize `teamDomain` to an http(s) origin so a host without `https://` still produces a valid issuer and JWKS URL.
+
 ## 0.1.0
 
 - Initial release: Cloudflare Access JWT verification at the DSH Origin.

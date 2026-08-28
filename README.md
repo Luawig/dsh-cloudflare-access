@@ -81,11 +81,11 @@ After unload, DSH restores the official remote privileged loopback pin. Restart 
 2. Copy the application **Audience** (`aud`) and your team domain, for example `https://example.cloudflareaccess.com`.
 3. Cloudflare injects `Cf-Access-Jwt-Assertion` on authenticated requests. The plugin verifies that header only. It does not trust the `CF_Authorization` cookie.
 
-Issuer and JWKS URL are derived:
+Issuer and JWKS URL are derived from the team domain after it is normalized to an http(s) origin (`https://` is assumed when the scheme is omitted; any path is dropped):
 
 ```text
-issuer  = teamDomain
-JWKS    = <teamDomain>/cdn-cgi/access/certs
+issuer  = <origin>
+JWKS    = <origin>/cdn-cgi/access/certs
 ```
 
 You do not configure `issuer` or `jwksUrl` separately. Multiple audiences are supported.
