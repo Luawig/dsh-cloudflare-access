@@ -58,8 +58,20 @@ export async function bridge(
     init.body = Buffer.concat(chunks)
     init.duplex = 'half'
   }
-  const request = new Request(new URL(req.url ?? '/', 'http://dsh.internal'), init)
-  const response = await apiHandler.fetch(request)
+  let response: Response
+  try {
+    const request = new Request(new URL(req.url ?? '/', 'http://dsh.internal'), init)
+    response = await apiHandler.fetch(request)
+  } catch {
+    if (abort.signal.aborted || res.writableEnded) return
+    if (!res.headersSent) {
+      res.writeHead(502, { connection: 'close' })
+      res.end()
+      return
+    }
+    res.destroy()
+    return
+  }
   res.writeHead(response.status, Object.fromEntries(response.headers.entries()))
   if (response.body === null) {
     res.end()

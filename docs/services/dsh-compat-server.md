@@ -37,6 +37,7 @@ RULE-SERVICE-COMPAT-5: 仅在 JWT 可能改变裁决时调用 JwtVerifier。`ord
 
 ## 故障处理
 - `apiProxy` 尚未就绪时，远程 privileged 即使 JWT 有效也 fail closed（拒绝），不得把请求交给会 403 的内部 pin 后当作成功。
+- `apiProxy.fetch` 抛错时，bridge 结束响应（502），不得把请求挂起直到客户端超时。
 - 包装期间抛错记入 DSH/Cordis logger。
 
 ## 示例

@@ -7,6 +7,7 @@
 - Skip the `prepare` build during dependency installs so `github:` installs use committed `lib/` without TypeScript or esbuild.
 - Fail CI when committed `lib/` does not match a fresh `pnpm build`.
 - Allow 30 seconds of clock skew on JWT `exp` / `nbf` so Origin time drift does not reject live Access tokens.
+- Return 502 from the privileged HTTP bridge when `apiProxy.fetch` throws, instead of leaving the client hanging.
 
 ## 0.1.0
 
