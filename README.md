@@ -55,7 +55,7 @@ Remote privileged requests must pass **both**:
 1. DSH Host / Origin / `sec-fetch-site` checks (`--trusted-host` remains mandatory).
 2. A valid Cloudflare Access JWT (signature, `iss`, `aud`, expiry; about 30 seconds of clock skew is allowed).
 
-A valid JWT never authorizes an arbitrary Host or Origin. Loopback (`localhost` / `127.0.0.1` / `::1`) does not require a JWT, so `SSH Tunnel → localhost → DSH` keeps working. Remote privileged APIs always require a JWT in v0.1.
+A valid JWT never authorizes an arbitrary Host or Origin. Loopback (`localhost` / `127.0.0.1` / `::1`) does not require a JWT, so `SSH Tunnel → localhost → DSH` keeps working. Remote privileged APIs always require a JWT in v1.0.
 
 Keep Origin reachable only from Cloudflare (or equivalent ingress). Installing this plugin is not a reason to put DSH on the public internet. Details: [SECURITY.md](./SECURITY.md).
 
@@ -168,13 +168,13 @@ Privileged remote APIs always require a valid JWT, regardless of this setting.
 | JWKS / key rotation failures | Origin must reach `https://<team>/cdn-cgi/access/certs`. No config change after Cloudflare rotates keys. |
 | Logs | Categories only (`expired`, `invalid_signature`, `issuer_mismatch`, `audience_mismatch`, `missing_token`, `jwks_unavailable`, `unconfigured`). Tokens are never logged. |
 
-v0.1 does not authorize `host.pickDirectory` or `host.openPath`. Some native-host UI may still appear; those RPCs stay rejected.
+v1.0 does not authorize `host.pickDirectory` or `host.openPath`. Some native-host UI may still appear; those RPCs stay rejected.
 
 ## Compatibility
 
 | Plugin | DSH | Status |
 | --- | --- | --- |
-| 0.1.x | 0.1.1-rc.2 | Live-tested (Web profile, remote Settings / Credentials) |
+| 1.0.x | 0.1.1-rc.2 | Live-tested (Web profile, remote Settings / Credentials) |
 
 Do not assume newer DSH releases work until this matrix is updated.
 
@@ -197,7 +197,7 @@ Plugin packaging follows [dsh.pub/develop-plugin.md](https://dsh.pub/develop-plu
 
 ### Maintainers
 
-Dependabot updates npm and GitHub Actions weekly. When publishing from GitHub Actions, use `npm publish --access public --provenance` with `id-token: write`. v0.1.0 was published without provenance.
+Dependabot updates npm and GitHub Actions weekly. When publishing from GitHub Actions, use `npm publish --access public --provenance` with `id-token: write`. v0.1.0 and v1.0.0 were published without provenance.
 
 ## License
 

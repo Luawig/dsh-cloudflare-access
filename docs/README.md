@@ -12,7 +12,7 @@
 6. [rules.md](./rules.md) — 不可违反的规则
 7. 需要实现细节时再读 [services/](./services/) 与 [protocols.md](./protocols.md)
 
-## 已实现（v0.1.0）
+## 已实现（v1.0.0）
 
 - Origin 验证 `Cf-Access-Jwt-Assertion`，Remote JWKS，fail closed。
 - 远程 privileged 授权（Settings / Credentials / 特权 Agent Preset / `llm.discoverModels`）。
@@ -20,7 +20,7 @@
 - Web Client capability enablement，且 `dsh.client.immediately: true`。
 - 标准 `dsh.bundle` + `dsh.client` 安装；unload 可逆。
 - 在 DSH `0.1.1-rc.2` Web profile 上 live 验证远程 Settings / Credentials。
-- npm 公共包 `dsh-cloudflare-access@0.1.0`。
+- npm 公共包 `dsh-cloudflare-access@1.0.0`。
 
 ## 尚未交付
 

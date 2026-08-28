@@ -55,7 +55,7 @@ export DSH_CF_ACCESS_AUDIENCES=your-access-application-aud
 1. DSH 的 Host / Origin / `sec-fetch-site` 检查（`--trusted-host` 仍是必须的）。
 2. 有效的 Cloudflare Access JWT（签名、`iss`、`aud`、过期时间；允许约 30 秒时钟偏差）。
 
-有效 JWT 永远不能授权任意 Host 或 Origin。Loopback（`localhost` / `127.0.0.1` / `::1`）不要求 JWT，因此 `SSH Tunnel → localhost → DSH` 仍然可用。v0.1 中远程 privileged API 始终要求 JWT。
+有效 JWT 永远不能授权任意 Host 或 Origin。Loopback（`localhost` / `127.0.0.1` / `::1`）不要求 JWT，因此 `SSH Tunnel → localhost → DSH` 仍然可用。v1.0 中远程 privileged API 始终要求 JWT。
 
 Origin 应只对 Cloudflare（或等价入口）可达。安装本插件不是把 DSH 挂到公网的理由。详见 [SECURITY.md](./SECURITY.md)。
 
@@ -168,13 +168,13 @@ auth:
 | JWKS / 密钥轮换失败 | Origin 必须能访问 `https://<team>/cdn-cgi/access/certs`。Cloudflare 轮换密钥后无需改配置。 |
 | 日志 | 只记录类别（`expired`、`invalid_signature`、`issuer_mismatch`、`audience_mismatch`、`missing_token`、`jwks_unavailable`、`unconfigured`）。从不记录 token。 |
 
-v0.1 不授权 `host.pickDirectory` 或 `host.openPath`。部分 native-host UI 仍可能出现；对应 RPC 会被拒绝。
+v1.0 不授权 `host.pickDirectory` 或 `host.openPath`。部分 native-host UI 仍可能出现；对应 RPC 会被拒绝。
 
 ## 兼容性
 
 | 插件 | DSH | 状态 |
 | --- | --- | --- |
-| 0.1.x | 0.1.1-rc.2 | Live-tested（Web profile，远程 Settings / Credentials） |
+| 1.0.x | 0.1.1-rc.2 | Live-tested（Web profile，远程 Settings / Credentials） |
 
 在本矩阵更新之前，不要默认更新的 DSH 版本可用。
 
@@ -197,7 +197,7 @@ dsh plugin --profile web add ./
 
 ### 维护者
 
-Dependabot 每周更新 npm 和 GitHub Actions。从 GitHub Actions 发布时，使用 `npm publish --access public --provenance`，并授予 `id-token: write`。v0.1.0 发布时没有 provenance。
+Dependabot 每周更新 npm 和 GitHub Actions。从 GitHub Actions 发布时，使用 `npm publish --access public --provenance`，并授予 `id-token: write`。v0.1.0 和 v1.0.0 发布时没有 provenance。
 
 ## License
 
