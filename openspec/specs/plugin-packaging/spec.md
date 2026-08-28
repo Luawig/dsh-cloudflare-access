@@ -36,6 +36,14 @@ The package MUST export `./cordis.patch.yml`, include `dsh-plugin` in `keywords`
 - **WHEN** `prepare` runs
 - **THEN** it does not require TypeScript or esbuild
 
+### Requirement: Committed runtime artifacts match source
+CI MUST rebuild `lib/` from `src/` and fail if the committed artifacts differ.
+
+#### Scenario: lib drift
+- **GIVEN** `src/` was changed without rebuilding `lib/`
+- **WHEN** CI runs `pnpm build`
+- **THEN** `git diff -- lib` is non-empty and the job fails
+
 ### Requirement: Configuration precedence and env lock
 Runtime configuration MUST resolve Environment Variables over Cordis/Bundle config over defaults. If `DSH_CF_ACCESS_TEAM_DOMAIN`, `DSH_CF_ACCESS_AUDIENCES`, or `DSH_CF_ACCESS_ORDINARY_MODE` exists, that field MUST NOT be overridden by Web Settings or Cordis config at runtime. Audiences env MUST accept comma-separated values. Users MUST NOT be required to configure issuer or jwksUrl separately.
 

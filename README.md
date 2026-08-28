@@ -194,7 +194,7 @@ pnpm typecheck
 pnpm pack:check
 ```
 
-After source changes, run `pnpm build` so committed `lib/` matches `src/`. Local development install:
+After source changes, run `pnpm build` so committed `lib/` matches `src/`. CI rebuilds `lib/` and fails if the tree drifts. Local development install:
 
 ```sh
 dsh plugin --profile web add ./
