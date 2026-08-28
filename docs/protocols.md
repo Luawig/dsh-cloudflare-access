@@ -50,8 +50,8 @@ auth:
 - `alg`: 由 JWKS 与 `jose` 允许的算法决定，拒绝 `none` 与降级。
 - `iss`: 必须等于规范化后的 `teamDomain` origin。
 - `aud`: string 或 string[]；必须与配置 audiences 有交集。
-- `exp`: 必须未过期。
-- `nbf`: 若存在则必须已生效。
+- `exp`: 必须未过期，允许 30 秒时钟偏差。
+- `nbf`: 若存在则必须已生效，同样允许 30 秒时钟偏差。
 
 不把 `email` / `identity_nonce` 映射为 DSH 用户。v0.1 无用户模型。
 

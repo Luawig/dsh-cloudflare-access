@@ -6,6 +6,7 @@
 - Skip JWT signature verification when it cannot change the allow/deny decision (`ordinary=off` APIs and failed Host/Origin).
 - Skip the `prepare` build during dependency installs so `github:` installs use committed `lib/` without TypeScript or esbuild.
 - Fail CI when committed `lib/` does not match a fresh `pnpm build`.
+- Allow 30 seconds of clock skew on JWT `exp` / `nbf` so Origin time drift does not reject live Access tokens.
 
 ## 0.1.0
 

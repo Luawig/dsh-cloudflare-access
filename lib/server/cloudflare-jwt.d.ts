@@ -14,6 +14,8 @@ export interface JwtVerifierOptions {
         cooldownDuration?: number;
     };
 }
+/** Seconds of clock skew accepted for exp/nbf. Origin clocks can lag Cloudflare. */
+export declare const CLOCK_TOLERANCE_SECONDS = 30;
 /**
  * Create a verifier that uses jose Remote JWK Set (or an injected getKey in tests).
  * Does not cache per-token results.
