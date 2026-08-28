@@ -10,7 +10,7 @@ accepted
 - 使用 `jose` 的 `jwtVerify` + `createRemoteJWKSet`。
 - JWKS URL 固定为 `<teamDomain>/cdn-cgi/access/certs`。
 - 不实现 token LRU、TTL 结果缓存或撤销列表。
-- 验证 `iss`、`aud`（多值命中）、`exp`、可选 `nbf`、签名与 alg。
+- 验证 `iss`、`aud`（多值命中）、`exp`、可选 `nbf`、签名与 alg。`exp` / `nbf` 允许 30 秒时钟偏差。
 
 ## 备选方案
 - 方案 A：自写 RSA/JWK parser。拒绝。

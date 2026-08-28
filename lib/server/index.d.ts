@@ -2,7 +2,7 @@ import { type CordisConfig } from '../config.ts';
 import { type PluginLogger } from './authorization.ts';
 export type { CordisConfig, PluginConfig } from '../config.ts';
 export { resolveConfig, isCloudflareConfigured, issuerOf, jwksUrlOf } from '../config.ts';
-export { createJwtVerifier } from './cloudflare-jwt.ts';
+export { createJwtVerifier, CLOCK_TOLERANCE_SECONDS } from './cloudflare-jwt.ts';
 export { decide, PRIVILEGED_METHODS, jwtParticipates } from './policy.ts';
 export declare const name = "cloudflare-access";
 export declare const inject: string[];

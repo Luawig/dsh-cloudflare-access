@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
 import { exportJWK, generateKeyPair, SignJWT, type CryptoKey, type JWK } from 'jose'
-import { createJwtVerifier } from '../src/server/cloudflare-jwt.ts'
+import { createJwtVerifier, CLOCK_TOLERANCE_SECONDS } from '../src/server/cloudflare-jwt.ts'
 import { resolveConfig } from '../src/config.ts'
 
 const TEAM = 'https://example.cloudflareaccess.com'
@@ -78,6 +78,33 @@ describe('Cloudflare Access JWT', () => {
       const result = await verifier.verify({ 'cf-access-jwt-assertion': token })
       expect(result.outcome).toBe('invalid')
       expect(result.reason).toBe('expired')
+    } finally {
+      server.close()
+    }
+  })
+
+  it('accepts a JWT within the clock-skew tolerance', async () => {
+    const { url, server } = await listen((_req, res) => {
+      res.writeHead(200, { 'content-type': 'application/json' })
+      res.end(JSON.stringify({ keys: [publicJwk] }))
+    })
+    try {
+      const localOrigin = url.replace('/cdn-cgi/access/certs', '')
+      const verifier = createJwtVerifier({
+        teamDomain: localOrigin,
+        audiences: [AUD_A],
+        ordinary: 'off',
+        envLocked: { teamDomain: false, audiences: false, ordinary: false },
+      }, { jwks: { cooldownDuration: 0 } })
+      const token = await new SignJWT({})
+        .setProtectedHeader({ alg: 'RS256', kid: 'key-1' })
+        .setIssuedAt()
+        .setIssuer(localOrigin)
+        .setAudience(AUD_A)
+        .setExpirationTime(Math.floor(Date.now() / 1000) - Math.min(5, CLOCK_TOLERANCE_SECONDS - 1))
+        .sign(privateKey)
+      const result = await verifier.verify({ 'cf-access-jwt-assertion': token })
+      expect(result.outcome).toBe('valid')
     } finally {
       server.close()
     }

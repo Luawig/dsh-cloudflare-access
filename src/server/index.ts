@@ -7,7 +7,7 @@ import { createJwtVerifier } from './cloudflare-jwt.ts'
 
 export type { CordisConfig, PluginConfig } from '../config.ts'
 export { resolveConfig, isCloudflareConfigured, issuerOf, jwksUrlOf } from '../config.ts'
-export { createJwtVerifier } from './cloudflare-jwt.ts'
+export { createJwtVerifier, CLOCK_TOLERANCE_SECONDS } from './cloudflare-jwt.ts'
 export { decide, PRIVILEGED_METHODS, jwtParticipates } from './policy.ts'
 
 export const name = 'cloudflare-access'

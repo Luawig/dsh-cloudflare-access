@@ -25,6 +25,8 @@ RULE-SERVICE-JWT-3: 多 audience 命中其一即为 valid。
 
 RULE-SERVICE-JWT-4: 忽略 Cookie。即使存在 `CF_Authorization` 也不得读取。
 
+RULE-SERVICE-JWT-5: `exp` 与 `nbf` 使用 30 秒 `clockTolerance`。超出容差仍按过期或 malformed 拒绝。
+
 ## 接口
 - `verify(headers, config): Promise<JwtVerification>`
 

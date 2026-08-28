@@ -30,6 +30,11 @@ The plugin SHALL verify JWTs with the `jose` library and MUST NOT implement RSA,
 - **WHEN** it is verified
 - **THEN** the outcome is `invalid` / `expired`
 
+#### Scenario: Clock skew within 30 seconds
+- **GIVEN** a token whose `exp` is fewer than 30 seconds in the past
+- **WHEN** it is verified
+- **THEN** the outcome is `valid`
+
 #### Scenario: Invalid signature
 - **GIVEN** a token signed with a key not in JWKS
 - **WHEN** it is verified

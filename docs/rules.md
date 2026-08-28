@@ -57,7 +57,7 @@ RULE-AUTH-UNCONFIGURED: `teamDomain` 或 `audiences` 为空时插件可以启动
 
 RULE-JWT-LIBRARY: 必须使用成熟 JWT/JWKS 库（v0.1 使用 `jose`）。禁止自实现 RSA、JWK 或 JWT parser。
 
-RULE-JWT-CHECKS: 验证必须包括 signature、alg、iss、aud、exp；nbf 存在时必须验证。拒绝 unsigned JWT 与 algorithm downgrade。
+RULE-JWT-CHECKS: 验证必须包括 signature、alg、iss、aud、exp；nbf 存在时必须验证。拒绝 unsigned JWT 与 algorithm downgrade。`exp` / `nbf` 允许 30 秒时钟偏差，超出仍拒绝。
 
 RULE-JWT-ISS: `iss` 必须等于规范化后的 `teamDomain`。规范化结果是 http(s) origin：缺 scheme 时补 `https://`，去掉 path 与尾斜杠；已有 `http://` 或 `https://` 时保留该 scheme 与端口。
 
