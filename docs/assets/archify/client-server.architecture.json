@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Client vs Server",
+    "quality_profile": "showcase",
+    "output": "docs/assets/archify/client-server.html",
+    "viewBox": [1280, 680],
+    "views": [
+      {
+        "id": "browser-capability",
+        "label": "Browser",
+        "focus": ["boot", "wrap", "ui"],
+        "note": "immediately: true loads the module before ui-settings snapshots loopback."
+      },
+      {
+        "id": "origin-authority",
+        "label": "Origin decision",
+        "focus": ["ui", "api", "decide"],
+        "note": "Server decides whether Settings may change. Client does not verify JWT."
+      }
+    ]
+  },
+  "components": [
+    { "id": "boot", "type": "frontend", "label": "Web boot", "sublabel": "immediately: true", "pos": [80, 120], "size": [160, 64] },
+    { "id": "wrap", "type": "frontend", "label": "Wrap isLoopback", "sublabel": "capability on", "pos": [80, 270], "size": [160, 64] },
+    { "id": "ui", "type": "frontend", "label": "ui-settings", "sublabel": "settings.describe", "pos": [80, 420], "size": [160, 64] },
+    { "id": "api", "type": "backend", "label": "/api", "sublabel": "settings.describe", "pos": [560, 270], "size": [150, 64] },
+    { "id": "decide", "type": "security", "label": "Server decision", "sublabel": "JWT + Host/Origin", "pos": [840, 270], "size": [170, 64] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Browser: no Cookie, no JWT verify", "wraps": ["boot", "wrap", "ui"] },
+    { "kind": "security-group", "label": "Origin: sole authorizer", "wraps": ["api", "decide"] }
+  ],
+  "connections": [
+    { "id": "boot-wrap", "from": "boot", "to": "wrap", "label": "prefetch module", "labelDy": 24 },
+    { "id": "wrap-ui", "from": "wrap", "to": "ui", "label": "Host persistence", "labelDy": 24 },
+    { "id": "ui-api", "from": "ui", "to": "api", "label": "RPC", "variant": "emphasis", "labelDy": -22 },
+    { "id": "api-decide", "from": "api", "to": "decide", "label": "policy decision", "variant": "security" },
+    { "id": "decide-ui", "from": "decide", "to": "ui", "label": "allow or deny", "variant": "dashed", "fromSide": "bottom", "toSide": "bottom" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Client", "items": ["Only wraps connection.isLoopback", "Does not infer login from Cookie", "Unload restores the original value"] },
+    { "dot": "rose", "title": "Server", "items": ["Verifies Cf-Access-Jwt-Assertion", "Rejects host.pickDirectory / host.openPath", "Is the sole authorizer"] }
+  ]
+}

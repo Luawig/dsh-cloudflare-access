@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Remote privileged request path",
+    "quality_profile": "showcase",
+    "output": "docs/assets/archify/privileged-request.html",
+    "viewBox": [1100, 640],
+    "views": [
+      {
+        "id": "happy-path",
+        "label": "Allow path",
+        "focus": ["req", "loopback", "host", "jwt", "proxy"],
+        "note": "Host/Origin runs before JWT. Success forwards to apiProxy."
+      },
+      {
+        "id": "loopback-bypass",
+        "label": "Loopback",
+        "focus": ["loopback", "inner"],
+        "note": "Loopback does not read JWT. It uses the original DSH handler."
+      },
+      {
+        "id": "deny-path",
+        "label": "Deny",
+        "focus": ["jwt", "deny"],
+        "note": "Missing token is 401. Invalid token is 403. No privileged implementation."
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "ingress", "label": "Request" },
+    { "id": "decide", "label": "Classify" },
+    { "id": "run", "label": "Execute" },
+    { "id": "stop", "label": "Deny", "variant": "exception" }
+  ],
+  "phases": [
+    { "id": "arrive", "label": "Arrive", "fromCol": 0, "toCol": 1 },
+    { "id": "classify", "label": "Classify", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "authorize", "label": "Authorize", "fromCol": 4, "toCol": 5 }
+  ],
+  "mainPath": ["req", "loopback", "host", "jwt", "proxy"],
+  "nodes": [
+    { "id": "req", "lane": "ingress", "col": 0, "type": "frontend", "label": "Remote /api", "sublabel": "JWT assertion" },
+    { "id": "loopback", "lane": "decide", "col": 0, "type": "backend", "label": "Loopback?", "sublabel": "localhost / ::1" },
+    { "id": "inner", "lane": "run", "col": 2, "type": "backend", "label": "DSH handler", "sublabel": "no JWT" },
+    { "id": "host", "lane": "decide", "col": 2, "type": "security", "label": "Host/Origin?", "sublabel": "trusted-host first" },
+    { "id": "jwt", "lane": "decide", "col": 4, "type": "security", "label": "JWT valid?", "sublabel": "privileged only" },
+    { "id": "deny", "lane": "stop", "col": 4, "type": "security", "label": "Deny", "sublabel": "401 or 403" },
+    { "id": "proxy", "lane": "run", "col": 5, "type": "backend", "label": "apiProxy", "sublabel": "bridge forward" }
+  ],
+  "edges": [
+    { "id": "req-loopback", "from": "req", "to": "loopback", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "route": "drop" },
+    { "id": "loopback-yes", "from": "loopback", "to": "inner", "label": "yes", "variant": "dashed", "role": "branch", "fromSide": "bottom", "toSide": "left", "route": "drop", "labelDy": 18 },
+    { "id": "loopback-no", "from": "loopback", "to": "host", "label": "no", "labelDy": -22 },
+    { "id": "host-fail", "from": "host", "to": "inner", "label": "fail", "variant": "dashed", "role": "branch", "fromSide": "bottom", "toSide": "top", "route": "drop", "labelDx": 36, "labelDy": 12 },
+    { "id": "host-ok", "from": "host", "to": "jwt", "label": "privileged", "variant": "emphasis", "labelDy": -22 },
+    { "id": "jwt-no", "from": "jwt", "to": "deny", "label": "missing / invalid", "variant": "security", "role": "error", "fromSide": "bottom", "toSide": "top", "route": "drop", "labelSegment": 1, "labelDx": -36, "labelDy": 16 },
+    { "id": "jwt-yes", "from": "jwt", "to": "proxy", "label": "bridge → apiProxy", "variant": "emphasis", "fromSide": "right", "toSide": "left", "labelDy": 25 }
+  ],
+  "cards": [
+    { "dot": "rose", "title": "Order is fixed", "items": ["Host/Origin first, then JWT", "A valid JWT must not rewrite Host to loopback"] },
+    { "dot": "cyan", "title": "Bypass", "items": ["Loopback does not require a JWT", "Host/Origin failure still uses the original handler"] }
+  ]
+}

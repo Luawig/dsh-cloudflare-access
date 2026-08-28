@@ -1,15 +1,16 @@
 # 文档索引
 
-内部文档描述当前有效状态。公开安装说明以仓库根目录 [README.md](../README.md) 为准（英文，面向 npm / 社区用户）。
+内部文档描述当前有效状态。公开安装说明以仓库根目录 [README.md](../README.md)（英文）和 [README.zh-CN.md](../README.zh-CN.md)（简体中文）为准。
 
 ## 阅读顺序
 
 1. [overview.md](./overview.md) — 定位、原则、术语
-2. [product/prd.md](./product/prd.md) — 目标与场景
-3. [product/scope.md](./product/scope.md) — 当前版本范围
-4. [architecture.md](./architecture.md) — 模块边界与请求路径
-5. [rules.md](./rules.md) — 不可违反的规则
-6. 需要实现细节时再读 [services/](./services/) 与 [protocols.md](./protocols.md)
+2. [diagrams.md](./diagrams.md) — 部署、请求路径、Client/Server、配置优先级（Archify HTML + SVG）
+3. [product/prd.md](./product/prd.md) — 目标与场景
+4. [product/scope.md](./product/scope.md) — 当前版本范围
+5. [architecture.md](./architecture.md) — 模块边界与请求路径
+6. [rules.md](./rules.md) — 不可违反的规则
+7. 需要实现细节时再读 [services/](./services/) 与 [protocols.md](./protocols.md)
 
 ## 已实现（v0.1.0）
 

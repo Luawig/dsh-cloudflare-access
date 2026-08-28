@@ -8,7 +8,7 @@ accepted
 
 ## 选定架构
 
-插件作为 DSH 进程内的 Cordis 组合层，而不是独立反向代理。
+插件作为 DSH 进程内的 Cordis 组合层，而不是独立反向代理。部署与请求路径图见 `docs/diagrams.md`。
 
 ```text
 Internet
