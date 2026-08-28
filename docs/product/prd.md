@@ -73,7 +73,7 @@ Cloudflare Access 已经完成身份认证，DSH 却无法识别该认证关系�
 ### 场景 D：普通 API 策略切换
 - 触发条件：管理员设置 `auth.ordinary` 为 `off` / `optional` / `required`。
 - 用户操作：远程调用非特权 API。
-- 系统响应：按第 17 节策略允许或拒绝；loopback 始终不受影响。
+- 系统响应：按 `docs/rules.md` 中 RULE-AUTH-ORDINARY-* 允许或拒绝；loopback 始终不受影响。
 - 成功结果：三种模式行为可预测，且不削弱 Host/Origin 防护。
 
 ### 场景 E：安装与卸载
