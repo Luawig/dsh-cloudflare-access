@@ -23,12 +23,18 @@ The package MUST ship a built `exports["./client"]` and declare `dsh.client` wit
 - **AND** the declaration has `immediately: true`
 
 ### Requirement: Community package identity
-The package MUST export `./cordis.patch.yml`, include `dsh-plugin` in `keywords`, and ship `lib/index.js`, `lib/client.js`, `cordis.patch.yml`, `README.md`, and `LICENSE` in the npm tarball and in the Git tree used for `github:` installs.
+The package MUST export `./cordis.patch.yml`, include `dsh-plugin` in `keywords`, and ship `lib/index.js`, `lib/client.js`, `cordis.patch.yml`, `README.md`, and `LICENSE` in the npm tarball and in the Git tree used for `github:` installs. A Git dependency install MUST use the committed `lib/` artifacts and MUST NOT require TypeScript or esbuild when those artifacts are present.
 
 #### Scenario: Pack contains runtime artifacts
 - **GIVEN** `pnpm pack`
 - **WHEN** the tarball is listed
 - **THEN** it contains `package/lib/index.js`, `package/lib/client.js`, and `package/cordis.patch.yml`
+
+#### Scenario: Git install skips prepare build
+- **GIVEN** a Git checkout that already contains `lib/index.js` and `lib/client.js`
+- **AND** the package is installed as a dependency of another project
+- **WHEN** `prepare` runs
+- **THEN** it does not require TypeScript or esbuild
 
 ### Requirement: Configuration precedence and env lock
 Runtime configuration MUST resolve Environment Variables over Cordis/Bundle config over defaults. If `DSH_CF_ACCESS_TEAM_DOMAIN`, `DSH_CF_ACCESS_AUDIENCES`, or `DSH_CF_ACCESS_ORDINARY_MODE` exists, that field MUST NOT be overridden by Web Settings or Cordis config at runtime. Audiences env MUST accept comma-separated values. Users MUST NOT be required to configure issuer or jwksUrl separately.

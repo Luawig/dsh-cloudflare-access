@@ -111,7 +111,7 @@ RULE-PACKAGING-CLIENT: 必须提供构建完成的 `exports["./client"]` 与 `ds
 
 RULE-PACKAGING-PEER: `peerDependencies` 只声明实际验证过的 DSH API 范围；v0.1 对准 `0.1.1-rc.2`，禁止提前写宽泛范围。
 
-RULE-PACKAGING-ARTIFACTS: Git 树与 npm tarball 必须包含 `lib/index.js`、`lib/client.js`、`README.md`、`LICENSE`。`lib/client.js` 必须是 `window.__ModuleLoader__.load` factory。`keywords` 必须包含 `dsh-plugin`。
+RULE-PACKAGING-ARTIFACTS: Git 树与 npm tarball 必须包含 `lib/index.js`、`lib/client.js`、`README.md`、`LICENSE`。`lib/client.js` 必须是 `window.__ModuleLoader__.load` factory。`keywords` 必须包含 `dsh-plugin`。作为依赖安装时，若 `lib/` 已存在，`prepare` 不得要求本机安装 TypeScript 或 esbuild。
 
 ## 无效模式
 - Cloudflare 故障时 fail open。
