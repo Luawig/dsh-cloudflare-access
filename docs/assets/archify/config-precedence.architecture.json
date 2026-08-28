@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Configuration precedence",
+    "quality_profile": "showcase",
+    "output": "docs/assets/archify/config-precedence.html",
+    "viewBox": [1280, 680],
+    "views": [
+      {
+        "id": "lock",
+        "label": "Environment lock",
+        "focus": ["env", "config"],
+        "note": "If the variable exists it locks the field, including an empty string."
+      },
+      {
+        "id": "derive",
+        "label": "Derived values",
+        "focus": ["config", "derived"],
+        "note": "issuer and JWKS are derived from teamDomain. Users do not set them."
+      }
+    ]
+  },
+  "components": [
+    { "id": "env", "type": "security", "label": "Environment", "sublabel": "Exists → locked", "pos": [80, 120], "size": [210, 72] },
+    { "id": "cordis", "type": "backend", "label": "Cordis / Bundle", "sublabel": "Only if env is unset", "pos": [80, 280], "size": [210, 72] },
+    { "id": "defaults", "type": "external", "label": "Defaults", "sublabel": "ordinary = off", "pos": [80, 440], "size": [210, 72] },
+    { "id": "config", "type": "backend", "label": "PluginConfig", "sublabel": "Env > Cordis > Default", "pos": [520, 280], "size": [190, 72] },
+    { "id": "derived", "type": "cloud", "label": "issuer + JWKS", "sublabel": "From teamDomain", "pos": [900, 280], "size": [190, 72] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Config sources", "wraps": ["env", "cordis", "defaults"] },
+    { "kind": "security-group", "label": "Runtime trust root", "wraps": ["config", "derived"] }
+  ],
+  "connections": [
+    { "id": "env-config", "from": "env", "to": "config", "label": "override and lock", "variant": "security", "fromSide": "right", "toSide": "top", "labelDy": -24 },
+    { "id": "cordis-config", "from": "cordis", "to": "config", "label": "used if unlocked" },
+    { "id": "defaults-config", "from": "defaults", "to": "config", "label": "fallback", "variant": "dashed", "fromSide": "right", "toSide": "bottom", "labelDy": 24 },
+    { "id": "config-derived", "from": "config", "to": "derived", "label": "do not set issuer / jwksUrl", "variant": "emphasis", "labelDy": -24 }
+  ],
+  "cards": [
+    { "dot": "rose", "title": "Lock", "items": ["DSH_CF_ACCESS_TEAM_DOMAIN", "DSH_CF_ACCESS_AUDIENCES", "DSH_CF_ACCESS_ORDINARY_MODE", "An empty string still locks the field"] },
+    { "dot": "cyan", "title": "Derived", "items": ["issuer is the normalized teamDomain origin", "JWKS is <origin>/cdn-cgi/access/certs", "Remote Settings cannot change the trust root"] }
+  ]
+}

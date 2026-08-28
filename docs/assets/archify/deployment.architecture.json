@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Deployment model",
+    "quality_profile": "showcase",
+    "output": "docs/assets/archify/deployment.html",
+    "viewBox": [1680, 820],
+    "views": [
+      {
+        "id": "ingress",
+        "label": "Ingress and Access",
+        "focus": ["internet", "access", "proxy"],
+        "note": "Identity stays in Cloudflare Access, not in this plugin."
+      },
+      {
+        "id": "origin-fence",
+        "label": "Origin network",
+        "focus": ["origin", "nginx", "dsh"],
+        "note": "Origin accepts Cloudflare or equivalent ingress only."
+      },
+      {
+        "id": "plugin-in-process",
+        "label": "In-process plugin",
+        "focus": ["dsh", "plugin_server", "plugin_client"],
+        "note": "The plugin runs inside DSH: Server authorizes, Client enables capability."
+      }
+    ]
+  },
+  "components": [
+    { "id": "internet", "type": "external", "label": "Internet", "sublabel": "Remote browser", "pos": [48, 320], "size": [128, 62] },
+    { "id": "access", "type": "security", "label": "Cloudflare Access", "sublabel": "Authentication", "pos": [256, 320], "size": [148, 62] },
+    { "id": "proxy", "type": "cloud", "label": "Cloudflare Proxy", "sublabel": "Injects assertion", "pos": [484, 320], "size": [148, 62] },
+    { "id": "origin", "type": "security", "label": "Origin allowlist", "sublabel": "Cloudflare ingress only", "pos": [712, 320], "size": [148, 62] },
+    { "id": "nginx", "type": "cloud", "label": "Reverse proxy", "sublabel": "Not managed here", "pos": [940, 320], "size": [140, 62] },
+    { "id": "dsh", "type": "backend", "label": "DeepSeek Harness", "sublabel": "--trusted-host", "pos": [1160, 320], "size": [156, 62] },
+    { "id": "plugin_server", "type": "backend", "label": "Server", "sublabel": "JWT + policy", "pos": [1400, 210], "size": [140, 62] },
+    { "id": "plugin_client", "type": "frontend", "label": "Client", "sublabel": "Capability only", "pos": [1400, 430], "size": [140, 62] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Cloudflare", "wraps": ["access", "proxy"] },
+    { "kind": "security-group", "label": "Origin network", "wraps": ["origin", "nginx", "dsh", "plugin_server", "plugin_client"] }
+  ],
+  "connections": [
+    { "id": "to-access", "from": "internet", "to": "access", "label": "HTTPS", "variant": "emphasis" },
+    { "id": "to-proxy", "from": "access", "to": "proxy", "label": "Authenticated session", "labelDy": -25 },
+    { "id": "to-origin", "from": "proxy", "to": "origin", "label": "Cf-Access-Jwt-Assertion", "variant": "security", "labelDy": -28 },
+    { "id": "to-nginx", "from": "origin", "to": "nginx", "label": "Allowed ingress" },
+    { "id": "to-dsh", "from": "nginx", "to": "dsh", "label": "Host / Origin", "labelDy": -28 },
+    { "id": "to-server", "from": "dsh", "to": "plugin_server", "label": "webServer wrap", "variant": "emphasis", "labelDy": 16 },
+    { "id": "to-client", "from": "dsh", "to": "plugin_client", "label": "Web module", "variant": "dashed" }
+  ],
+  "cards": [
+    { "dot": "rose", "title": "Added layer", "items": ["Identity stays in Cloudflare Access", "A valid JWT does not authorize arbitrary Host/Origin", "Do not put Origin on the public internet just to install this plugin"] },
+    { "dot": "cyan", "title": "In-process", "items": ["Server verifies JWT and makes the allow/deny decision", "Client only does capability enablement", "The reverse proxy is owned by the deployer"] }
+  ]
+}
