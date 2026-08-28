@@ -443,6 +443,44 @@ describe('wrap-layer authorization paths', () => {
     expect(inner).toBe(0)
     for (const dispose of disposers) dispose()
   })
+
+  it('rejects an events upgrade with 403 when the JWT is present but invalid', async () => {
+    const webServer = createFakeWebServer()
+    const disposers: Array<() => void> = []
+    installServerCompat({
+      webServer,
+      logger: { info() {}, warn() {} },
+      effect: collectEffects(disposers),
+      get() { return undefined },
+    }, {
+      config: { ...config, ordinary: 'required' },
+      verifier: {
+        async verify() {
+          return { outcome: 'invalid', reason: 'expired', audienceMatched: null }
+        },
+      },
+      getTrustedHosts: () => ['dsh.example.com'],
+      getApiFetchHandler: () => undefined,
+    })
+    let inner = 0
+    webServer.registerUpgrade({
+      path: '/api/events.mux',
+      handler: async () => { inner += 1 },
+    })
+    const route = webServer.upgrades.get('/api/events.mux')
+    if (route === undefined) throw new Error('upgrade missing')
+    const result = await invokeUpgrade(route.handler, {
+      url: '/api/events.mux',
+      headers: {
+        host: 'dsh.example.com',
+        origin: 'https://dsh.example.com',
+        'cf-access-jwt-assertion': 'expired-token',
+      },
+    })
+    expect(result.status).toBe(403)
+    expect(inner).toBe(0)
+    for (const dispose of disposers) dispose()
+  })
 })
 
 async function invoke(

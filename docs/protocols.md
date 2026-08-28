@@ -83,7 +83,7 @@ auth:
 
 ## 错误处理
 
-若包装层能写 HTTP status，则：
+若包装层能写 HTTP status（含 `/api/events.*` WebSocket 握手），则：
 
 - `missing_token` → `401 Unauthorized`
 - `unconfigured` → `403 Forbidden`
