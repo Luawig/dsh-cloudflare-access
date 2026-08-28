@@ -202,6 +202,8 @@ dsh plugin --profile web add ./
 
 Plugin packaging follows [dsh.pub/develop-plugin.md](https://dsh.pub/develop-plugin.md). This repository is not claiming a dsh.pub listing or a security audit. Maintainers can later add the GitHub topic `dsh-plugin` and submit the public commit to the community catalog.
 
+npm dependencies and GitHub Actions are updated through Dependabot. When publishing a new version from GitHub Actions, use `npm publish --access public --provenance` with `id-token: write` so the tarball carries npm provenance. v0.1.0 was published without provenance.
+
 ## License
 
 MIT
