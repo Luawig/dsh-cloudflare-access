@@ -17,7 +17,7 @@ accepted
 - FACT-6: 远程 privileged API 固定要求有效 JWT，v0.1 不提供关闭开关。覆盖 `settings.*`、`credentials.*`、特权子集 `agentPreset.*`、`llm.discoverModels`。
 - FACT-7: 普通 API 的 JWT 策略可配置为 `off | optional | required`，默认 `off`。Loopback 不受该配置影响。
 - FACT-8: Origin 只信任 HTTP Header `Cf-Access-Jwt-Assertion`，不以 `CF_Authorization` Cookie 作为身份依据。
-- FACT-9: 用户只配置 `cloudflare.teamDomain` 与 `cloudflare.audiences`（多值）。内部推导 `issuer = teamDomain`，`jwksUrl = <teamDomain>/cdn-cgi/access/certs`。
+- FACT-9: 用户只配置 `cloudflare.teamDomain` 与 `cloudflare.audiences`（多值）。`teamDomain` 规范化为 http(s) origin；`issuer` 等于该 origin，`jwksUrl = <origin>/cdn-cgi/access/certs`。
 - FACT-10: 必须支持环境变量 `DSH_CF_ACCESS_TEAM_DOMAIN`、`DSH_CF_ACCESS_AUDIENCES`（逗号分隔）、`DSH_CF_ACCESS_ORDINARY_MODE`。优先级为 Environment > Cordis/Bundle Config > Default。环境变量一旦存在，运行时不得被 Web Settings 覆盖。
 - FACT-11: JWT 验证必须使用成熟库（推荐 `jose`），覆盖 signature、alg、iss、aud、exp、nbf（存在时）。拒绝 unsigned、algorithm downgrade、错误 iss/aud、过期 token。
 - FACT-12: 使用 Remote JWK Set 缓存与 key rotation；v0.1 不缓存单个 JWT 验证结果。JWKS 不可用时 fail closed，禁止因 Cloudflare 网络异常而放行。

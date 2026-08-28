@@ -59,7 +59,7 @@ RULE-JWT-LIBRARY: 必须使用成熟 JWT/JWKS 库（v0.1 使用 `jose`）。禁�
 
 RULE-JWT-CHECKS: 验证必须包括 signature、alg、iss、aud、exp；nbf 存在时必须验证。拒绝 unsigned JWT 与 algorithm downgrade。
 
-RULE-JWT-ISS: `iss` 必须等于配置的 `teamDomain`（规范化后比较）。
+RULE-JWT-ISS: `iss` 必须等于规范化后的 `teamDomain`。规范化结果是 http(s) origin：缺 scheme 时补 `https://`，去掉 path 与尾斜杠；已有 `http://` 或 `https://` 时保留该 scheme 与端口。
 
 RULE-JWT-AUD: 配置的 `audiences` 命中 token aud 中任一值即通过；token 无 aud 或都不匹配则拒绝。
 
@@ -79,7 +79,7 @@ RULE-CONFIG-ENV-NAMES: 必须识别：
 - `DSH_CF_ACCESS_AUDIENCES`（逗号分隔，去空白）
 - `DSH_CF_ACCESS_ORDINARY_MODE`（`off` | `optional` | `required`）
 
-RULE-CONFIG-DERIVE: 不要求用户配置 issuer 或 jwksUrl。`issuer = teamDomain`，`jwksUrl = <teamDomain>/cdn-cgi/access/certs`。
+RULE-CONFIG-DERIVE: 不要求用户配置 issuer 或 jwksUrl。`issuer` 等于规范化后的 `teamDomain` origin，`jwksUrl = <origin>/cdn-cgi/access/certs`。
 
 ## 日志规则
 

@@ -50,4 +50,35 @@ describe('config resolution', () => {
   it('rejects an illegal ordinary mode', () => {
     expect(() => resolveConfig({}, { [ENV_ORDINARY_MODE]: 'maybe' })).toThrow(/off \| optional \| required/)
   })
+
+  it('normalizes a host without a scheme to an https origin', () => {
+    const config = resolveConfig({
+      cloudflare: { teamDomain: 'example.cloudflareaccess.com', audiences: ['a'] },
+    }, {})
+    expect(config.teamDomain).toBe('https://example.cloudflareaccess.com')
+    expect(jwksUrlOf(config)).toBe('https://example.cloudflareaccess.com/cdn-cgi/access/certs')
+  })
+
+  it('strips a trailing slash and any path from teamDomain', () => {
+    const config = resolveConfig({
+      cloudflare: {
+        teamDomain: 'https://example.cloudflareaccess.com/cdn-cgi/access/',
+        audiences: ['a'],
+      },
+    }, {})
+    expect(config.teamDomain).toBe('https://example.cloudflareaccess.com')
+  })
+
+  it('keeps an explicit http origin including port', () => {
+    const config = resolveConfig({
+      cloudflare: { teamDomain: 'http://127.0.0.1:8443/', audiences: ['a'] },
+    }, {})
+    expect(config.teamDomain).toBe('http://127.0.0.1:8443')
+  })
+
+  it('rejects a non-http teamDomain scheme', () => {
+    expect(() => resolveConfig({
+      cloudflare: { teamDomain: 'ftp://example.cloudflareaccess.com' },
+    }, {})).toThrow(/not a valid URL/)
+  })
 })
