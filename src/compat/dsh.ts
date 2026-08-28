@@ -8,7 +8,8 @@ import type { Duplex } from 'node:stream'
 import type { PluginConfig } from '../config.ts'
 import { httpStatusFor, logDenied, type PluginLogger } from '../server/authorization.ts'
 import type { JwtVerifier } from '../server/cloudflare-jwt.ts'
-import { decide, isPrivilegedMethod } from '../server/policy.ts'
+import { decide, isPrivilegedMethod, jwtParticipates } from '../server/policy.ts'
+import { readAccessJwt } from '../server/types.ts'
 import {
   API_PATH, HOST_EVENTS_PATH, MUX_EVENTS_PATH, bridge, rpcMethodFromUrl, type FetchHandler,
 } from './http-bridge.ts'
@@ -114,28 +115,35 @@ async function handleApi(
   deps: ServerCompatDeps,
   logger: PluginLogger,
 ): Promise<void> {
+  const headers = nodeHeaders(req)
   const trustedHosts = deps.getTrustedHosts()
-  const isLoopback = requestIsLoopback(nodeHeaders(req))
-  if (isLoopback) {
+  if (requestIsLoopback(headers)) {
     await inner(req, res)
     return
   }
 
-  const hostOriginTrusted = isTrustedApiRequest(nodeHeaders(req), trustedHosts)
-  const method = rpcMethodFromUrl(req.url)
-  const jwt = await jwtFor(req, deps.verifier)
-  const decision = decide({
-    isLoopback: false,
-    hostOriginTrusted,
-    method,
-    ordinary: deps.config.ordinary,
-    jwt,
-  })
-
+  const hostOriginTrusted = isTrustedApiRequest(headers, trustedHosts)
   if (!hostOriginTrusted) {
     await inner(req, res)
     return
   }
+
+  const method = rpcMethodFromUrl(req.url)
+  const token = readAccessJwt(headers)
+  const tokenPresent = token !== undefined && token.trim() !== ''
+  if (!jwtParticipates({ method, ordinary: deps.config.ordinary, tokenPresent })) {
+    await inner(req, res)
+    return
+  }
+
+  const jwt = await jwtFor(req, deps.verifier)
+  const decision = decide({
+    isLoopback: false,
+    hostOriginTrusted: true,
+    method,
+    ordinary: deps.config.ordinary,
+    jwt,
+  })
 
   if (decision.effect === 'deny') {
     const http = httpStatusFor(decision)
@@ -167,18 +175,24 @@ async function handleUpgrade(
   deps: ServerCompatDeps,
   logger: PluginLogger,
 ): Promise<void> {
+  const headers = nodeHeaders(req)
   const trustedHosts = deps.getTrustedHosts()
-  const isLoopback = requestIsLoopback(nodeHeaders(req))
-  if (isLoopback) {
+  if (requestIsLoopback(headers)) {
     await inner(req, socket, head)
     return
   }
-  const hostOriginTrusted = isTrustedApiRequest(nodeHeaders(req), trustedHosts)
+  const hostOriginTrusted = isTrustedApiRequest(headers, trustedHosts)
   if (!hostOriginTrusted) {
     await inner(req, socket, head)
     return
   }
   const method = rpcMethodFromUrl(req.url)
+  const token = readAccessJwt(headers)
+  const tokenPresent = token !== undefined && token.trim() !== ''
+  if (!jwtParticipates({ method, ordinary: deps.config.ordinary, tokenPresent })) {
+    await inner(req, socket, head)
+    return
+  }
   const jwt = await jwtFor(req, deps.verifier)
   const decision = decide({
     isLoopback: false,

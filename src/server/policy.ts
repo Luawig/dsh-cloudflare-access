@@ -46,6 +46,26 @@ export function isPrivilegedMethod(method: string | undefined): boolean {
   return method !== undefined && PRIVILEGED_METHODS.has(method)
 }
 
+/**
+ * Whether cryptographic JWT verification can change the decision.
+ * Host/Origin failure and loopback are handled before this is consulted.
+ */
+export function jwtParticipates(input: {
+  method: string | undefined
+  ordinary: OrdinaryMode
+  tokenPresent: boolean
+}): boolean {
+  if (isPrivilegedMethod(input.method)) return true
+  switch (input.ordinary) {
+    case 'off':
+      return false
+    case 'optional':
+      return input.tokenPresent
+    case 'required':
+      return true
+  }
+}
+
 function jwtOk(jwt: JwtVerification): boolean {
   return jwt.outcome === 'valid'
 }

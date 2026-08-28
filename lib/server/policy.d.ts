@@ -17,6 +17,15 @@ export interface PolicyInput {
 }
 export declare function isPrivilegedMethod(method: string | undefined): boolean;
 /**
+ * Whether cryptographic JWT verification can change the decision.
+ * Host/Origin failure and loopback are handled before this is consulted.
+ */
+export declare function jwtParticipates(input: {
+    method: string | undefined;
+    ordinary: OrdinaryMode;
+    tokenPresent: boolean;
+}): boolean;
+/**
  * Pure authorization decision. Host/Origin is consumed as a boolean; this
  * function never inspects headers and never treats JWT as a Host substitute.
  */

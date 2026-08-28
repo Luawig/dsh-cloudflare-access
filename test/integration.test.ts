@@ -3,7 +3,8 @@ import { generateKeyPair, SignJWT, exportJWK } from 'jose'
 import { apply as applyServer } from '../src/server/index.ts'
 import { httpStatusFor } from '../src/server/authorization.ts'
 import { decide } from '../src/server/policy.ts'
-import type { WebRoute, WebUpgradeRoute } from '../src/compat/dsh.ts'
+import { installServerCompat, type WebRoute, type WebUpgradeRoute } from '../src/compat/dsh.ts'
+import type { JwtVerification } from '../src/server/types.ts'
 
 interface FakeWebServer {
   register(route: WebRoute): () => void
@@ -182,6 +183,116 @@ describe('end-to-end privileged wrap', () => {
 
     for (const dispose of disposers) dispose()
     jwks.close()
+  })
+})
+
+describe('JWT verification is skipped when it cannot change the decision', () => {
+  function pluginConfig(ordinary: 'off' | 'optional' | 'required' = 'off') {
+    return {
+      teamDomain: 'https://example.cloudflareaccess.com',
+      audiences: ['aud'],
+      ordinary,
+      envLocked: { teamDomain: false, audiences: false, ordinary: false },
+    }
+  }
+
+  function countingVerifier(verify: () => Promise<JwtVerification>) {
+    let calls = 0
+    return {
+      calls: () => calls,
+      verifier: {
+        async verify() {
+          calls += 1
+          return verify()
+        },
+      },
+    }
+  }
+
+  async function mountApi(input: {
+    ordinary?: 'off' | 'optional' | 'required'
+    verify?: () => Promise<JwtVerification>
+  }) {
+    const webServer = createFakeWebServer()
+    const disposers: Array<() => void> = []
+    const counted = countingVerifier(input.verify ?? (async () => ({
+      outcome: 'invalid',
+      reason: 'invalid_signature',
+      audienceMatched: null,
+    })))
+    installServerCompat({
+      webServer,
+      logger: { info() {}, warn() {} },
+      effect: collectEffects(disposers),
+      get() { return undefined },
+    }, {
+      config: pluginConfig(input.ordinary),
+      verifier: counted.verifier,
+      getTrustedHosts: () => ['dsh.example.com'],
+      getApiFetchHandler: () => ({ fetch: async () => new Response('proxied') }),
+    })
+    const innerCalls: string[] = []
+    webServer.register({
+      kind: 'prefix',
+      path: '/api',
+      handler: async (_req, res) => {
+        innerCalls.push('inner')
+        res.writeHead(200)
+        res.end('inner')
+      },
+    })
+    const route = webServer.routes.get('prefix:/api')
+    if (route === undefined) throw new Error('route missing')
+    return { route, innerCalls, calls: counted.calls, disposers }
+  }
+
+  it('does not verify ordinary APIs when ordinary=off', async () => {
+    const { route, innerCalls, calls, disposers } = await mountApi({ ordinary: 'off' })
+    const result = await invoke(route.handler, {
+      url: '/api/llm.models',
+      headers: {
+        host: 'dsh.example.com',
+        origin: 'https://dsh.example.com',
+        'cf-access-jwt-assertion': 'not-a-jwt',
+      },
+    })
+    expect(result.status).toBe(200)
+    expect(result.body).toBe('inner')
+    expect(innerCalls).toEqual(['inner'])
+    expect(calls()).toBe(0)
+    for (const dispose of disposers) dispose()
+  })
+
+  it('does not verify when Host/Origin already failed', async () => {
+    const { route, innerCalls, calls, disposers } = await mountApi({ ordinary: 'required' })
+    const result = await invoke(route.handler, {
+      url: '/api/settings.describe',
+      headers: {
+        host: 'evil.example',
+        origin: 'https://evil.example',
+        'cf-access-jwt-assertion': 'not-a-jwt',
+      },
+    })
+    expect(result.status).toBe(200)
+    expect(innerCalls).toEqual(['inner'])
+    expect(calls()).toBe(0)
+    for (const dispose of disposers) dispose()
+  })
+
+  it('still verifies remote privileged APIs when ordinary=off', async () => {
+    const { route, innerCalls, calls, disposers } = await mountApi({ ordinary: 'off' })
+    const result = await invoke(route.handler, {
+      url: '/api/settings.describe',
+      headers: {
+        host: 'dsh.example.com',
+        origin: 'https://dsh.example.com',
+        'cf-access-jwt-assertion': 'not-a-jwt',
+      },
+    })
+    expect(result.status).toBe(403)
+    expect(innerCalls).toEqual([])
+    expect(calls()).toBe(1)
+    for (const dispose of disposers) dispose()
   })
 })
 

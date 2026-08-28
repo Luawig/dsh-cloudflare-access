@@ -50,7 +50,7 @@ accepted
 - THEN 同样的远程 privileged 请求回到官方 403/forbidden 行为
 
 ## 非功能验收标准
-- 性能：不在每个请求上拉取 Cloudflare JWKS；不缓存单个 JWT 结果。
+- 性能：不在每个请求上拉取 Cloudflare JWKS；不缓存单个 JWT 结果。`ordinary=off` 的普通 API、Host/Origin 失败的请求不进行 JWT 验签。
 - 安全：fail closed；JWT 不能替代 Host/Origin；日志不记录 token / Cookie / credential / API key。
 - 可观测性：启动时记录 issuer 是否配置、audience 数量、ordinary 模式；失败记录原因类别。
 - 兼容性：README 兼容性矩阵只包含实测 DSH 版本；peerDependencies 不声明未测范围。当前实测为 `0.1.1-rc.2`。

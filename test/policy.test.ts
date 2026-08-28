@@ -1,4 +1,4 @@
-import { decide, isPrivilegedMethod } from '../src/server/policy.ts'
+import { decide, isPrivilegedMethod, jwtParticipates } from '../src/server/policy.ts'
 import type { JwtVerification } from '../src/server/types.ts'
 
 const valid: JwtVerification = { outcome: 'valid', reason: null, audienceMatched: 'aud' }
@@ -100,5 +100,13 @@ describe('authorization policy', () => {
     expect(isPrivilegedMethod('host.openPath')).toBe(false)
     expect(isPrivilegedMethod('host.pickDirectory')).toBe(false)
     expect(isPrivilegedMethod('agentPreset.list')).toBe(false)
+  })
+
+  it('skips JWT verification unless the decision can change', () => {
+    expect(jwtParticipates({ method: 'llm.models', ordinary: 'off', tokenPresent: true })).toBe(false)
+    expect(jwtParticipates({ method: 'events.mux', ordinary: 'optional', tokenPresent: false })).toBe(false)
+    expect(jwtParticipates({ method: 'events.mux', ordinary: 'optional', tokenPresent: true })).toBe(true)
+    expect(jwtParticipates({ method: 'events.host', ordinary: 'required', tokenPresent: false })).toBe(true)
+    expect(jwtParticipates({ method: 'settings.describe', ordinary: 'off', tokenPresent: false })).toBe(true)
   })
 })
