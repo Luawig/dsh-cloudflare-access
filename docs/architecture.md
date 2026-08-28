@@ -99,8 +99,8 @@ RULE-ARCH-6: Client 模块必须 `dsh.client.immediately: true` 且 inject `@dee
 
 ### 远程 ordinary HTTP
 1. Host/Origin 仍由 DSH 原 handler 执行（包装层先按 ordinary 策略处理 JWT）。
-2. `off`：不看 JWT，交给原 handler。
-3. `optional`：无 JWT 交给原 handler；有 JWT 则必须有效。
+2. `off`：不看 JWT，不验签，交给原 handler。
+3. `optional`：无 JWT 不验签，交给原 handler；有 JWT 则必须有效。
 4. `required`：必须有效 JWT，再交给原 handler。
 
 ### Loopback

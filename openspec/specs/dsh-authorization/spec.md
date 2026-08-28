@@ -69,6 +69,12 @@ Ordinary (non-privileged) remote APIs SHALL follow `auth.ordinary` after Host/Or
 - **WHEN** a non-privileged RPC is called
 - **THEN** the decision is allow according to DSH original policy
 
+#### Scenario: Ordinary off with a present JWT
+- **GIVEN** `ordinary=off` and a remote trusted-host request with a JWT
+- **WHEN** a non-privileged RPC is called
+- **THEN** the decision is allow according to DSH original policy
+- **AND** the plugin MUST NOT cryptographically verify that JWT
+
 #### Scenario: Ordinary optional with invalid JWT
 - **GIVEN** `ordinary=optional` and a remote request with an invalid JWT
 - **WHEN** a non-privileged RPC is called

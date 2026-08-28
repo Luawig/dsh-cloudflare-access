@@ -19,7 +19,7 @@ accepted
 
 ## 影响
 - 正向影响：key rotation 无需重启；实现面小；与 Cloudflare 文档一致。
-- 负向影响：每个请求都做 RSA 验签。规格认为请求量可接受。
+- 负向影响：privileged 请求以及 JWT 会改变裁决的普通 API 仍需 RSA 验签。规格认为该请求量可接受。v0.1 不缓存单个 JWT 结果。
 
 ## 相关文档
 - `docs/services/jwt-verifier.md`

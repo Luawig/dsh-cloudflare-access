@@ -26,6 +26,8 @@ RULE-SERVICE-COMPAT-3: 远程 privileged 成功路径禁止修改 Host/Origin �
 
 RULE-SERVICE-COMPAT-4: `host.pickDirectory` / `host.openPath` 即使 JWT 有效也走 DSH 原 handler，从而继续 403。
 
+RULE-SERVICE-COMPAT-5: 仅在 JWT 可能改变裁决时调用 JwtVerifier。`ordinary=off` 的普通 API、Host/Origin 失败、以及 `optional` 且无 token 的路径不得验签。不得因此改变 allow/deny 结果。
+
 ## 接口
 - `install(ctx, policy, verifier, config): Disposable`
 
